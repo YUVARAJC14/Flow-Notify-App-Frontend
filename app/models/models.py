@@ -21,6 +21,7 @@ class User(Base):
     hashed_password = Column(String)
 
     tasks = relationship("Task", back_populates="owner")
+    events = relationship("Event", back_populates="owner")
 
 
 class Task(Base):
@@ -37,3 +38,16 @@ class Task(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="tasks")
+
+
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String, nullable=True)
+    date = Column(Date)
+    time = Column(Time)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
+    owner = relationship("User", back_populates="events")

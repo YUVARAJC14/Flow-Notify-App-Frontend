@@ -42,4 +42,20 @@ class Task(TaskBase):
     owner_id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
+
+class EventBase(BaseModel):
+    title: str
+    description: str | None = None
+    date: date
+    time: time
+
+class EventCreate(EventBase):
+    pass
+
+class Event(EventBase):
+    id: int
+    owner_id: int
+
+    class Config:
+        orm_mode = True

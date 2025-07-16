@@ -85,3 +85,18 @@ def get_today_schedule(db: Session, user_id: int):
         models.Task.owner_id == user_id,
         models.Task.due_date == today
     ).order_by(models.Task.due_time).all()
+
+def get_tasks_by_date(db: Session, user_id: int, task_date: date):
+    return db.query(models.Task).filter(models.Task.owner_id == user_id, models.Task.due_date == task_date).all()
+
+def get_tasks_due_in_days(db: Session, user_id: int, days: int):
+    today = date.today()
+    end_date = today + timedelta(days=days)
+    return db.query(models.Task).filter(
+        models.Task.owner_id == user_id,
+        models.Task.due_date >= today,
+        models.Task.due_date < end_date
+    ).all()
+
+def get_events_by_date(db: Session, user_id: int, event_date: date):
+    return db.query(models.Event).filter(models.Event.owner_id == user_id, models.Event.date == event_date).all()
