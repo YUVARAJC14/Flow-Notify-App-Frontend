@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Time, Enum, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from ..database.database import Base
 import enum
@@ -33,6 +33,7 @@ class Task(Base):
     due_time = Column(Time)
     priority = Column(Enum(PriorityEnum))
     reminder = Column(Enum(ReminderEnum))
+    completed = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="tasks")

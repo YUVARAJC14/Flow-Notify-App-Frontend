@@ -6,7 +6,7 @@ from .. import crud, models, schemas
 from ..database.database import SessionLocal, engine, Base
 from ..security import verify_password, create_session_token, verify_session_token
 
-Base.metadata.create_all(bind=engine)
+
 
 router = APIRouter()
 

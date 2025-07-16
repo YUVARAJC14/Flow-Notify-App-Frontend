@@ -32,6 +32,7 @@ class TaskBase(BaseModel):
     due_time: time
     priority: PriorityEnum
     reminder: ReminderEnum
+    completed: bool = False
 
 class TaskCreate(TaskBase):
     pass
