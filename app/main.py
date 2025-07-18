@@ -1,12 +1,26 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from .routers import users, tasks, home
+from .database.database import init_db
+from .routers import users, tasks, home, events
+from . import models
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
-app.include_router(users.router)
-app.include_router(tasks.router)
-app.include_router(home.router)
+def create_app():
+    app = FastAPI(lifespan=lifespan)
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Flow Notify API"}
+    app.include_router(users.router)
+    app.include_router(tasks.router)
+    app.include_router(home.router)
+    app.include_router(events.router)
+
+    @app.get("/")
+    def read_root():
+        return {"message": "Welcome to the Flow Notify API"}
+
+    return app
+
+app = create_app()

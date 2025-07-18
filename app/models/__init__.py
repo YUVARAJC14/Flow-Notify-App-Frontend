@@ -1,1 +1,1 @@
-from .models import User, Task
+from .models import User, Task, Event

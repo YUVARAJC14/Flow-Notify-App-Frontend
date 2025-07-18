@@ -98,5 +98,42 @@ def get_tasks_due_in_days(db: Session, user_id: int, days: int):
         models.Task.due_date < end_date
     ).all()
 
-def get_events_by_date(db: Session, user_id: int, event_date: date):
-    return db.query(models.Event).filter(models.Event.owner_id == user_id, models.Event.date == event_date).all()
+def create_user_event(db: Session, event: schemas.EventCreate, user_id: int):
+    db_event = models.Event(**event.model_dump(), owner_id=user_id)
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+def get_events(db: Session, user_id: int, start_datetime: datetime = None, end_datetime: datetime = None, category: schemas.CategoryEnum = None):
+    query = db.query(models.Event).filter(models.Event.owner_id == user_id)
+    if start_datetime:
+        query = query.filter(models.Event.start_datetime >= start_datetime)
+    if end_datetime:
+        query = query.filter(models.Event.end_datetime <= end_datetime)
+    if category:
+        query = query.filter(models.Event.category == category)
+    return query.all()
+
+def get_event_by_id(db: Session, event_id: int, user_id: int):
+    return db.query(models.Event).filter(and_(models.Event.id == event_id, models.Event.owner_id == user_id)).first()
+
+def update_event(db: Session, event: models.Event, event_update: schemas.EventCreate):
+    event_data = event_update.model_dump(exclude_unset=True)
+    for key, value in event_data.items():
+        setattr(event, key, value)
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+def delete_event(db: Session, event: models.Event):
+    db.delete(event)
+    db.commit()
+
+def get_events_by_datetime_range(db: Session, user_id: int, start_datetime: datetime, end_datetime: datetime):
+    return db.query(models.Event).filter(
+        models.Event.owner_id == user_id,
+        models.Event.start_datetime >= start_datetime,
+        models.Event.start_datetime <= end_datetime
+    ).all()

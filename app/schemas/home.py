@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-from .schemas import Task
-from .schemas import Event
+from .schemas import Task, Event
 
 class HomePage(BaseModel):
     user_name: str

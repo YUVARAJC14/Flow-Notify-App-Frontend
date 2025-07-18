@@ -20,6 +20,9 @@ def get_db():
 
 @router.get("/home", response_model=schemas_home.HomePage)
 def get_home_page(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     today = date.today()
     
     # Calculate Today's Flow
@@ -31,7 +34,7 @@ def get_home_page(db: Session = Depends(get_db), current_user: models.User = Dep
     upcoming_tasks = crud.get_tasks_due_in_days(db, user_id=current_user.id, days=7)
 
     # Today's Schedule
-    todays_schedule = crud.get_events_by_date(db, user_id=current_user.id, event_date=today)
+    todays_schedule = crud.get_events(db, user_id=current_user.id, start_datetime=today, end_datetime=today + timedelta(days=1))
 
     print(f"total_tasks_today: {total_tasks_today}")
     print(f"completed_tasks_today: {completed_tasks_today}")

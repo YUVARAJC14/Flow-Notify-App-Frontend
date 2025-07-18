@@ -1,9 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
-# Import models to ensure they are registered with Base
-import app.models.models
+from .base import Base
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./flow_notify.db"
 
@@ -12,7 +9,5 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
-
-# Create all tables
-Base.metadata.create_all(bind=engine)
+def init_db():
+    Base.metadata.create_all(bind=engine)

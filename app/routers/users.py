@@ -39,12 +39,23 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = crud.get_user_by_username(db, username=form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    print(f"Login attempt for user: {form_data.username}")
+    if not user:
+        print("User not found.")
         raise HTTPException(
             status_code=401,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    print(f"User found: {user.username}, Hashed Password from DB: {user.hashed_password}")
+    if not verify_password(form_data.password, user.hashed_password):
+        print("Password verification failed.")
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    print("Password verification successful.")
     session_token = create_session_token(data={"sub": user.username})
     response.set_cookie(key="session", value=session_token, httponly=True)
     return {"message": "Login successful"}
