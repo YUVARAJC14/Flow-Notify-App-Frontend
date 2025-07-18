@@ -1,13 +1,14 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
-from . import models, schemas
+from . import models
+from .schemas import schemas as schemas_all
 from .security import get_password_hash
 from datetime import date, timedelta, datetime
 
 def get_user_by_username(db: Session, username: str):
     return db.query(models.User).filter(models.User.username == username).first()
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas_all.UserCreate):
     hashed_password = get_password_hash(user.password)
     db_user = models.User(username=user.username, hashed_password=hashed_password)
     db.add(db_user)
@@ -15,7 +16,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.refresh(db_user)
     return db_user
 
-def create_user_task(db: Session, task: schemas.TaskCreate, user_id: int):
+def create_user_task(db: Session, task: schemas_all.TaskCreate, user_id: int):
     db_task = models.Task(**task.model_dump(), owner_id=user_id)
     db.add(db_task)
     db.commit()
@@ -42,7 +43,7 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
 def get_task_by_id(db: Session, task_id: int, user_id: int):
     return db.query(models.Task).filter(and_(models.Task.id == task_id, models.Task.owner_id == user_id)).first()
 
-def update_task(db: Session, task: models.Task, task_update: schemas.TaskCreate):
+def update_task(db: Session, task: models.Task, task_update: schemas_all.TaskCreate):
     task_data = task_update.model_dump(exclude_unset=True)
     for key, value in task_data.items():
         setattr(task, key, value)
@@ -117,14 +118,14 @@ def get_tasks_due_in_days(db: Session, user_id: int, days: int):
         models.Task.due_date < end_date
     ).all()
 
-def create_user_event(db: Session, event: schemas.EventCreate, user_id: int):
+def create_user_event(db: Session, event: schemas_all.EventCreate, user_id: int):
     db_event = models.Event(**event.model_dump(), owner_id=user_id)
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
     return db_event
 
-def get_events(db: Session, user_id: int, start_datetime: datetime = None, end_datetime: datetime = None, category: schemas.CategoryEnum = None):
+def get_events(db: Session, user_id: int, start_datetime: datetime = None, end_datetime: datetime = None, category: schemas_all.CategoryEnum = None):
     query = db.query(models.Event).filter(models.Event.owner_id == user_id)
     if start_datetime:
         query = query.filter(models.Event.start_datetime >= start_datetime)
@@ -137,7 +138,7 @@ def get_events(db: Session, user_id: int, start_datetime: datetime = None, end_d
 def get_event_by_id(db: Session, event_id: int, user_id: int):
     return db.query(models.Event).filter(and_(models.Event.id == event_id, models.Event.owner_id == user_id)).first()
 
-def update_event(db: Session, event: models.Event, event_update: schemas.EventCreate):
+def update_event(db: Session, event: models.Event, event_update: schemas_all.EventCreate):
     event_data = event_update.model_dump(exclude_unset=True)
     for key, value in event_data.items():
         setattr(event, key, value)
@@ -149,6 +150,41 @@ def update_event(db: Session, event: models.Event, event_update: schemas.EventCr
 def delete_event(db: Session, event: models.Event):
     db.delete(event)
     db.commit()
+
+def delete_event(db: Session, event: models.Event):
+    db.delete(event)
+    db.commit()
+
+def update_user_profile(db: Session, user: models.User, profile_update: schemas_all.UserProfileUpdate):
+    for key, value in profile_update.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_user_password(db: Session, user: models.User, hashed_password: str):
+    user.hashed_password = hashed_password
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_app_settings(db: Session, user: models.User, settings_update: schemas_all.AppSettingsUpdate):
+    for key, value in settings_update.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_notification_settings(db: Session, user: models.User, notification_update: schemas_all.NotificationSettingsUpdate):
+    for key, value in notification_update.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 def get_events_by_datetime_range(db: Session, user_id: int, start_datetime: datetime, end_datetime: datetime):
     return db.query(models.Event).filter(

@@ -11,7 +11,33 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
+    email: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+    theme: Optional[str] = None
+    language: Optional[str] = None
+    email_notifications_enabled: Optional[bool] = None
+    push_notifications_enabled: Optional[bool] = None
     model_config = ConfigDict(from_attributes=True)
+
+class UserProfileUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+class AppSettingsUpdate(BaseModel):
+    theme: Optional[str] = None
+    language: Optional[str] = None
+
+class NotificationSettingsUpdate(BaseModel):
+    email_notifications_enabled: Optional[bool] = None
+    push_notifications_enabled: Optional[bool] = None
+
+class Feedback(BaseModel):
+    message: str
 
 class PriorityEnum(str, Enum):
     high = "High"

@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from .database.database import init_db
-from .routers import users, tasks, home, events, calendar, insights
+from .routers import users, tasks, home, events, calendar, insights, profile
 from . import models
 
 @asynccontextmanager
@@ -18,6 +18,7 @@ def create_app():
     app.include_router(events.router)
     app.include_router(calendar.router)
     app.include_router(insights.router)
+    app.include_router(profile.router)
 
     @app.get("/")
     def read_root():

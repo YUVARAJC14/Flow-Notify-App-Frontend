@@ -25,6 +25,12 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    email = Column(String, unique=True, index=True, nullable=True)
+    profile_picture_url = Column(String, nullable=True)
+    theme = Column(String, default="light")
+    language = Column(String, default="en")
+    email_notifications_enabled = Column(Boolean, default=True)
+    push_notifications_enabled = Column(Boolean, default=True)
 
     tasks = relationship("Task", back_populates="owner")
     events = relationship("Event", back_populates="owner")
