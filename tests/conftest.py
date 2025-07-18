@@ -7,7 +7,7 @@ import importlib
 
 from app.main import create_app
 from app.database.base import Base
-from app.routers import users, tasks, events, home
+from app.routers import users, tasks, events, home, calendar
 from app import crud, schemas
 from app.security import get_password_hash
 
@@ -50,6 +50,7 @@ def client(db_session):
     app.dependency_overrides[tasks.get_db] = lambda: db_session
     app.dependency_overrides[events.get_db] = lambda: db_session
     app.dependency_overrides[home.get_db] = lambda: db_session
+    app.dependency_overrides[calendar.get_db] = lambda: db_session
     with TestClient(app) as c:
         yield c
 

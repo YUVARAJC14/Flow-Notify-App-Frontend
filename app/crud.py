@@ -137,3 +137,28 @@ def get_events_by_datetime_range(db: Session, user_id: int, start_datetime: date
         models.Event.start_datetime >= start_datetime,
         models.Event.start_datetime <= end_datetime
     ).all()
+
+def get_events_by_month(db: Session, user_id: int, year: int, month: int):
+    start_date = date(year, month, 1)
+    if month == 12:
+        end_date = date(year + 1, 1, 1)
+    else:
+        end_date = date(year, month + 1, 1)
+    
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.min.time())
+
+    return db.query(models.Event).filter(
+        models.Event.owner_id == user_id,
+        models.Event.start_datetime >= start_datetime,
+        models.Event.start_datetime < end_datetime
+    ).all()
+
+def get_events_by_date(db: Session, user_id: int, event_date: date):
+    start_datetime = datetime.combine(event_date, datetime.min.time())
+    end_datetime = datetime.combine(event_date, datetime.max.time())
+    return db.query(models.Event).filter(
+        models.Event.owner_id == user_id,
+        models.Event.start_datetime >= start_datetime,
+        models.Event.start_datetime <= end_datetime
+    ).order_by(models.Event.start_datetime).all()
