@@ -41,6 +41,7 @@ class Task(Base):
     priority = Column(Enum(PriorityEnum))
     reminder = Column(Enum(ReminderEnum))
     completed = Column(Boolean, default=False)
+    completed_at = Column(DateTime, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="tasks")

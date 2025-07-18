@@ -46,6 +46,10 @@ def update_task(db: Session, task: models.Task, task_update: schemas.TaskCreate)
     task_data = task_update.model_dump(exclude_unset=True)
     for key, value in task_data.items():
         setattr(task, key, value)
+    if "completed" in task_data and task_data["completed"] and task.completed_at is None:
+        task.completed_at = datetime.now()
+    elif "completed" in task_data and not task_data["completed"] and task.completed_at is not None:
+        task.completed_at = None
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -54,6 +58,21 @@ def update_task(db: Session, task: models.Task, task_update: schemas.TaskCreate)
 def delete_task(db: Session, task: models.Task):
     db.delete(task)
     db.commit()
+
+def get_tasks_by_date_range(db: Session, user_id: int, start_date: date, end_date: date):
+    return db.query(models.Task).filter(
+        models.Task.owner_id == user_id,
+        models.Task.due_date >= start_date,
+        models.Task.due_date <= end_date
+    ).all()
+
+def get_completed_tasks_by_date_range(db: Session, user_id: int, start_date: date, end_date: date):
+    return db.query(models.Task).filter(
+        models.Task.owner_id == user_id,
+        models.Task.completed == True,
+        models.Task.completed_at >= start_date,
+        models.Task.completed_at <= end_date
+    ).all()
 
 def get_today_progress(db: Session, user_id: int) -> float:
     today = date.today()
