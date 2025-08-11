@@ -1,30 +1,80 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
-from . import models
+from .models import models
 from .schemas import schemas as schemas_all
-from .security import get_password_hash
+from .auth_utils import get_password_hash
 from datetime import date, timedelta, datetime
+from typing import Optional
 
-def get_user_by_username(db: Session, username: str):
-    return db.query(models.User).filter(models.User.username == username).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
+
+def create_password_reset_token(db: Session, user: models.User):
+    # This should be implemented with a secure token generation and storage mechanism
+    # For now, returning a dummy token
+    return {"token": "dummy_reset_token"}
+
+def get_user_by_reset_token(db: Session, token: str):
+    # This should be implemented with a secure token verification mechanism
+    # For now, returning a dummy user
+    return db.query(models.User).first()
+
+def get_user_by_email_or_username(db: Session, identifier: str):
+    # Try to find by email first
+    user = db.query(models.User).filter(models.User.email == identifier).first()
+    if user:
+        return user
+    # If not found by email, try to find by full_name (if applicable, though email is preferred for login)
+    # Note: For a real application, you might want to enforce unique full_name if using it for login
+    # or stick strictly to email for login.
+    user = db.query(models.User).filter(models.User.full_name == identifier).first()
+    return user
+
+def add_token_to_blocklist(db: Session, jti: str):
+    db_token = models.TokenBlocklist(jti=jti)
+    db.add(db_token)
+    db.commit()
+    db.refresh(db_token)
+    return db_token
+
+def is_token_blocklisted(db: Session, jti: str):
+    return db.query(models.TokenBlocklist).filter(models.TokenBlocklist.jti == jti).first() is not None
+
 
 def create_user(db: Session, user: schemas_all.UserCreate):
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(username=user.username, hashed_password=hashed_password)
+    db_user = models.User(full_name=user.fullName, email=user.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
 def create_user_task(db: Session, task: schemas_all.TaskCreate, user_id: int):
-    db_task = models.Task(**task.model_dump(), owner_id=user_id)
+    db_task = models.Task(
+        title=task.title,
+        description=task.description,
+        due_date=task.due_date if task.due_date else date.today(),
+        due_time=task.due_time if task.due_time else datetime.now().time(),
+        priority=task.priority,
+        reminder=task.reminder,
+        completed=task.completed,
+        recurrence_rule=task.recurrence_rule,
+        goal_id=task.goal_id,
+        parent_id=task.parent_id,
+        owner_id=user_id
+    )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
 
-def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = "all"):
+def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = "all", parent_id: Optional[int] = None):
     query = db.query(models.Task).filter(models.Task.owner_id == user_id)
+
+    if parent_id is not None:
+        query = query.filter(models.Task.parent_id == parent_id)
+    else:
+        query = query.filter(models.Task.parent_id == None) # Only fetch top-level tasks by default
 
     if search:
         query = query.filter(models.Task.title.contains(search) | models.Task.description.contains(search))
@@ -47,13 +97,37 @@ def update_task(db: Session, task: models.Task, task_update: schemas_all.TaskCre
     task_data = task_update.model_dump(exclude_unset=True)
     for key, value in task_data.items():
         setattr(task, key, value)
-    if "completed" in task_data and task_data["completed"] and task.completed_at is None:
-        task.completed_at = datetime.now()
-    elif "completed" in task_data and not task_data["completed"] and task.completed_at is not None:
-        task.completed_at = None
+    
+    # Handle completed_at timestamp
+    if "completed" in task_data:
+        if task_data["completed"] and task.completed_at is None:
+            task.completed_at = datetime.now()
+        elif not task_data["completed"] and task.completed_at is not None:
+            task.completed_at = None
+
     db.add(task)
     db.commit()
     db.refresh(task)
+
+    # Logic to update parent task status based on sub-task completion
+    if task.parent_id:
+        parent_task = db.query(models.Task).filter(models.Task.id == task.parent_id).first()
+        if parent_task:
+            subtasks = db.query(models.Task).filter(models.Task.parent_id == parent_task.id).all()
+            all_subtasks_completed = all(subtask.completed for subtask in subtasks)
+            if all_subtasks_completed and not parent_task.completed:
+                parent_task.completed = True
+                parent_task.completed_at = datetime.now()
+                db.add(parent_task)
+                db.commit()
+                db.refresh(parent_task)
+            elif not all_subtasks_completed and parent_task.completed:
+                parent_task.completed = False
+                parent_task.completed_at = None
+                db.add(parent_task)
+                db.commit()
+                db.refresh(parent_task)
+
     return task
 
 def delete_task(db: Session, task: models.Task):
@@ -119,7 +193,18 @@ def get_tasks_due_in_days(db: Session, user_id: int, days: int):
     ).all()
 
 def create_user_event(db: Session, event: schemas_all.EventCreate, user_id: int):
-    db_event = models.Event(**event.model_dump(), owner_id=user_id)
+    db_event = models.Event(
+        title=event.title,
+        location=event.location,
+        start_datetime=event.start_datetime,
+        end_datetime=event.end_datetime,
+        category=event.category,
+        notes=event.notes,
+        reminder_minutes_before=event.reminder_minutes_before,
+        recurrence_rule=event.recurrence_rule,
+        recurrence_end_date=event.recurrence_end_date,
+        owner_id=user_id
+    )
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
@@ -158,14 +243,12 @@ def delete_event(db: Session, event: models.Event):
 def update_user_profile(db: Session, user: models.User, profile_update: schemas_all.UserProfileUpdate):
     for key, value in profile_update.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
-    db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
 def update_user_password(db: Session, user: models.User, hashed_password: str):
     user.hashed_password = hashed_password
-    db.add(user)
     db.commit()
     db.refresh(user)
     return user
@@ -173,7 +256,6 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
 def update_app_settings(db: Session, user: models.User, settings_update: schemas_all.AppSettingsUpdate):
     for key, value in settings_update.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
-    db.add(user)
     db.commit()
     db.refresh(user)
     return user
@@ -181,7 +263,6 @@ def update_app_settings(db: Session, user: models.User, settings_update: schemas
 def update_notification_settings(db: Session, user: models.User, notification_update: schemas_all.NotificationSettingsUpdate):
     for key, value in notification_update.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
-    db.add(user)
     db.commit()
     db.refresh(user)
     return user

@@ -1,23 +1,39 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import date, time, datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 
-class UserBase(BaseModel):
-    username: str
-
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    fullName: str
+    email: str
     password: str
+
+class UserBase(BaseModel):
+    email: str
 
 class User(UserBase):
     id: int
-    email: Optional[str] = None
     profile_picture_url: Optional[str] = None
     theme: Optional[str] = None
     language: Optional[str] = None
     email_notifications_enabled: Optional[bool] = None
     push_notifications_enabled: Optional[bool] = None
     model_config = ConfigDict(from_attributes=True)
+
+class LoginRequest(BaseModel):
+    emailOrUsername: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+class LoginResponse(BaseModel):
+    accessToken: str
+    refreshToken: str
+    user: User
+
 
 class UserProfileUpdate(BaseModel):
     username: Optional[str] = None
@@ -35,6 +51,19 @@ class AppSettingsUpdate(BaseModel):
 class NotificationSettingsUpdate(BaseModel):
     email_notifications_enabled: Optional[bool] = None
     push_notifications_enabled: Optional[bool] = None
+
+class ForgotPasswordSchema(BaseModel):
+    email: str
+
+class ResendVerificationSchema(BaseModel):
+    email: EmailStr
+
+class VerifyEmailSchema(BaseModel):
+    token: str
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    new_password: str
 
 class Feedback(BaseModel):
     message: str
@@ -58,19 +87,43 @@ class CategoryEnum(str, Enum):
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
-    due_date: date
-    due_time: time
-    priority: PriorityEnum
-    reminder: ReminderEnum
+    due_date: Optional[date] = None
+    due_time: Optional[time] = None
+    priority: Optional[PriorityEnum] = None
+    reminder: Optional[ReminderEnum] = None
     completed: bool = False
+    recurrence_rule: Optional[str] = None
+    recurrence_end_date: Optional[date] = None
+    goal_id: Optional[int] = None
+    parent_id: Optional[int] = None
 
-class TaskCreate(TaskBase):
-    pass
+class TaskCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    due_date: Optional[date] = None
+    due_time: Optional[time] = None
+    priority: Optional[PriorityEnum] = PriorityEnum.medium
+    reminder: Optional[ReminderEnum] = None
+    completed: bool = False
+    recurrence_rule: Optional[str] = None
+    recurrence_end_date: Optional[date] = None
+    goal_id: Optional[int] = None
+    parent_id: Optional[int] = None
 
 class Task(TaskBase):
     id: int
     owner_id: int
+    subtasks: List['Task'] = [] # For hierarchical tasks
     model_config = ConfigDict(from_attributes=True)
+
+class TaskUpdate(BaseModel):
+    completed: bool
+
+class TaskListGrouped(BaseModel):
+    today: List[Task]
+    tomorrow: List[Task]
+
+
 
 class EventBase(BaseModel):
     title: str
@@ -80,6 +133,8 @@ class EventBase(BaseModel):
     category: CategoryEnum
     notes: Optional[str] = None
     reminder_minutes_before: Optional[int] = None
+    recurrence_rule: Optional[str] = None
+    recurrence_end_date: Optional[date] = None
 
 class EventCreate(EventBase):
     pass
@@ -88,3 +143,62 @@ class Event(EventBase):
     id: int
     owner_id: int
     model_config = ConfigDict(from_attributes=True)
+
+class GoalStatusEnum(str, Enum):
+    not_started = "Not Started"
+    in_progress = "In Progress"
+    completed = "Completed"
+    abandoned = "Abandoned"
+
+class GoalBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    due_date: Optional[date] = None
+    status: GoalStatusEnum = GoalStatusEnum.not_started
+    progress: int = 0
+
+class GoalCreate(GoalBase):
+    pass
+
+class Goal(GoalBase):
+    id: int
+    owner_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class NaturalLanguageTaskCreate(BaseModel):
+    text: str
+
+class NaturalLanguageTaskResponse(BaseModel):
+    status: str
+    message: str
+    parsed_task: Optional[Task] = None
+
+
+class SchedulingRequest(BaseModel):
+    task_id: int
+    preferred_time_range: Optional[tuple[time, time]] = None
+
+class SchedulingSuggestion(BaseModel):
+    start_time: time
+    end_time: time
+    confidence_score: float
+
+class GoogleCalendarSyncRequest(BaseModel):
+    force_full_sync: bool = False
+
+class Nudge(BaseModel):
+    id: str
+    message: str
+    action_url: Optional[str] = None
+
+class Notification(BaseModel):
+    id: str
+    title: str
+    body: str
+    scheduled_time: datetime
+    sent: bool = False
+    read: bool = False
+
+class NotificationTimingSuggestion(BaseModel):
+    suggested_time: datetime
+    reason: str

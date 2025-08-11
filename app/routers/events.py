@@ -1,79 +1,54 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from .. import crud, models, schemas
-from ..database.database import SessionLocal
-from ..routers.users import get_current_user
+from .. import crud, models
+from ..schemas import schemas
+from ..database.database import get_db
+from ..security import get_current_user
 from typing import List, Optional
-from datetime import datetime
+from datetime import date
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/v1/events",
+    tags=["events"],
+)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@router.post("/events/", response_model=schemas.Event)
+@router.post("/", response_model=schemas.Event, status_code=status.HTTP_201_CREATED)
 def create_event(
     event: schemas.EventCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
     return crud.create_user_event(db=db, event=event, user_id=current_user.id)
 
-@router.get("/events/", response_model=List[schemas.Event])
+@router.get("/", response_model=List[schemas.Event])
 def read_events(
-    start_datetime: Optional[datetime] = Query(None),
-    end_datetime: Optional[datetime] = Query(None),
-    category: Optional[schemas.CategoryEnum] = Query(None),
+    start_date: Optional[date] = Query(None, alias="start_date"),
+    end_date: Optional[date] = Query(None, alias="end_date"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return crud.get_events(db=db, user_id=current_user.id, start_datetime=start_datetime, end_datetime=end_datetime, category=category)
+    return crud.get_events(db=db, user_id=current_user.id, start_date=start_date, end_date=end_date)
 
-@router.get("/events/{event_id}", response_model=schemas.Event)
-def read_event(
-    event_id: int,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    db_event = crud.get_event_by_id(db=db, event_id=event_id, user_id=current_user.id)
-    if db_event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return db_event
-
-@router.put("/events/{event_id}", response_model=schemas.Event)
+@router.put("/{event_id}", response_model=schemas.Event)
 def update_event(
     event_id: int,
     event: schemas.EventCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
     db_event = crud.get_event_by_id(db=db, event_id=event_id, user_id=current_user.id)
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return crud.update_event(db=db, event=db_event, event_update=event)
 
-@router.delete("/events/{event_id}", status_code=204)
+@router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_event(
     event_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
     db_event = crud.get_event_by_id(db=db, event_id=event_id, user_id=current_user.id)
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     crud.delete_event(db=db, event=db_event)
-    return {"ok": True}
+    return

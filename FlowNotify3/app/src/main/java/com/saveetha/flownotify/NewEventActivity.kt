@@ -1,0 +1,288 @@
+package com.saveetha.flownotify
+
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+
+class NewEventActivity : AppCompatActivity() {
+
+    private lateinit var eventTitleEditText: EditText
+    private lateinit var locationEditText: EditText
+    private lateinit var selectedDateTextView: TextView
+    private lateinit var startTimeTextView: TextView
+    private lateinit var endTimeTextView: TextView
+    private lateinit var notesEditText: EditText
+    private lateinit var reminderTextView: TextView
+
+    // Category selection
+    private lateinit var categoryWork: TextView
+    private lateinit var categoryPersonal: TextView
+    private lateinit var categoryHealth: TextView
+    private lateinit var categorySocial: TextView
+    private var selectedCategory: String = "Work"
+
+    // Date & Time
+    private val calendar: Calendar = Calendar.getInstance()
+    private var startTimeHour: Int = 10
+    private var startTimeMinute: Int = 0
+    private var endTimeHour: Int = 11
+    private var endTimeMinute: Int = 0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_new_event)
+
+        initViews()
+        setupInitialValues()
+        setupListeners()
+    }
+
+    private fun initViews() {
+        eventTitleEditText = findViewById(R.id.et_event_title)
+        locationEditText = findViewById(R.id.et_location)
+        selectedDateTextView = findViewById(R.id.tv_selected_date)
+        startTimeTextView = findViewById(R.id.tv_start_time)
+        endTimeTextView = findViewById(R.id.tv_end_time)
+        notesEditText = findViewById(R.id.et_notes)
+        reminderTextView = findViewById(R.id.tv_reminder)
+
+        // Categories
+        categoryWork = findViewById(R.id.category_work)
+        categoryPersonal = findViewById(R.id.category_personal)
+        categoryHealth = findViewById(R.id.category_health)
+        categorySocial = findViewById(R.id.category_social)
+    }
+
+    private fun setupInitialValues() {
+        // Set current date
+        updateDateDisplay()
+
+        // Set default time
+        updateTimeDisplay()
+    }
+
+    private fun setupListeners() {
+        // Close button
+        findViewById<ImageButton>(R.id.btn_close).setOnClickListener {
+            finish()
+        }
+
+        // Date picker
+        findViewById<LinearLayout>(R.id.layout_date_picker).setOnClickListener {
+            showDatePicker()
+        }
+
+        // Time pickers
+        findViewById<LinearLayout>(R.id.layout_start_time).setOnClickListener {
+            showTimePicker(true)
+        }
+
+        findViewById<LinearLayout>(R.id.layout_end_time).setOnClickListener {
+            showTimePicker(false)
+        }
+
+        // Categories
+        categoryWork.setOnClickListener {
+            updateCategorySelection("Work")
+        }
+
+        categoryPersonal.setOnClickListener {
+            updateCategorySelection("Personal")
+        }
+
+        categoryHealth.setOnClickListener {
+            updateCategorySelection("Health")
+        }
+
+        categorySocial.setOnClickListener {
+            updateCategorySelection("Social")
+        }
+
+        // Reminder selection
+        findViewById<LinearLayout>(R.id.layout_reminders).setOnClickListener {
+            showReminderOptions()
+        }
+
+        // Save button
+        findViewById<Button>(R.id.btn_save_event).setOnClickListener {
+            saveEvent()
+        }
+    }
+
+    private fun updateCategorySelection(category: String) {
+        // Update visual selection
+        val selectedBackground = when (category) {
+            "Work" -> {
+                categoryWork.alpha = 1.0f
+                categoryPersonal.alpha = 0.6f
+                categoryHealth.alpha = 0.6f
+                categorySocial.alpha = 0.6f
+                R.drawable.bg_category_work
+            }
+            "Personal" -> {
+                categoryWork.alpha = 0.6f
+                categoryPersonal.alpha = 1.0f
+                categoryHealth.alpha = 0.6f
+                categorySocial.alpha = 0.6f
+                R.drawable.bg_category_personal
+            }
+            "Health" -> {
+                categoryWork.alpha = 0.6f
+                categoryPersonal.alpha = 0.6f
+                categoryHealth.alpha = 1.0f
+                categorySocial.alpha = 0.6f
+                R.drawable.bg_category_health
+            }
+            else -> {
+                categoryWork.alpha = 0.6f
+                categoryPersonal.alpha = 0.6f
+                categoryHealth.alpha = 0.6f
+                categorySocial.alpha = 1.0f
+                R.drawable.bg_category_social
+            }
+        }
+
+        selectedCategory = category
+    }
+
+    private fun showDatePicker() {
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                updateDateDisplay()
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
+    }
+
+    private fun showTimePicker(isStartTime: Boolean) {
+        val hour = if (isStartTime) startTimeHour else endTimeHour
+        val minute = if (isStartTime) startTimeMinute else endTimeMinute
+
+        val timePickerDialog = TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                if (isStartTime) {
+                    startTimeHour = hourOfDay
+                    startTimeMinute = minute
+
+                    // Update end time if needed
+                    if (endTimeHour < hourOfDay || (endTimeHour == hourOfDay && endTimeMinute < minute)) {
+                        endTimeHour = if (hourOfDay < 23) hourOfDay + 1 else hourOfDay
+                        endTimeMinute = minute
+                    }
+                } else {
+                    endTimeHour = hourOfDay
+                    endTimeMinute = minute
+
+                    // Update start time if needed
+                    if (startTimeHour > hourOfDay || (startTimeHour == hourOfDay && startTimeMinute > minute)) {
+                        startTimeHour = hourOfDay
+                        startTimeMinute = minute
+                    }
+                }
+                updateTimeDisplay()
+            },
+            hour,
+            minute,
+            false // 12-hour format
+        )
+        timePickerDialog.show()
+    }
+
+    private fun updateDateDisplay() {
+        val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
+        val formattedDate = dateFormat.format(calendar.time)
+
+        // Check if date is today
+        val today = Calendar.getInstance()
+        val isToday = (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR))
+
+        selectedDateTextView.text = if (isToday) {
+            "Today, $formattedDate"
+        } else {
+            formattedDate
+        }
+    }
+
+    private fun updateTimeDisplay() {
+        // Format start time
+        val startTimeCalendar = Calendar.getInstance()
+        startTimeCalendar.set(Calendar.HOUR_OF_DAY, startTimeHour)
+        startTimeCalendar.set(Calendar.MINUTE, startTimeMinute)
+        val startTimeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val formattedStartTime = startTimeFormat.format(startTimeCalendar.time)
+
+        // Format end time
+        val endTimeCalendar = Calendar.getInstance()
+        endTimeCalendar.set(Calendar.HOUR_OF_DAY, endTimeHour)
+        endTimeCalendar.set(Calendar.MINUTE, endTimeMinute)
+        val endTimeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val formattedEndTime = endTimeFormat.format(endTimeCalendar.time)
+
+        // Update UI
+        startTimeTextView.text = formattedStartTime
+        endTimeTextView.text = formattedEndTime
+    }
+
+    private fun showReminderOptions() {
+        // Here you would show a dialog or dropdown with reminder options
+        // For simplicity, we'll just cycle through some options
+        val currentReminder = reminderTextView.text.toString()
+        val reminderOptions = listOf(
+            "15 minutes before",
+            "30 minutes before",
+            "1 hour before",
+            "2 hours before",
+            "1 day before"
+        )
+
+        val currentIndex = reminderOptions.indexOf(currentReminder)
+        val nextIndex = (currentIndex + 1) % reminderOptions.size
+
+        reminderTextView.text = reminderOptions[nextIndex]
+    }
+
+    private fun saveEvent() {
+        // Validate form
+        if (eventTitleEditText.text.toString().trim().isEmpty()) {
+            Toast.makeText(this, "Please enter an event title", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Prepare event data
+        val eventData = HashMap<String, Any>()
+        eventData["title"] = eventTitleEditText.text.toString().trim()
+        eventData["location"] = locationEditText.text.toString().trim()
+        eventData["date"] = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+        eventData["startTime"] = String.format("%02d:%02d", startTimeHour, startTimeMinute)
+        eventData["endTime"] = String.format("%02d:%02d", endTimeHour, endTimeMinute)
+        eventData["category"] = selectedCategory
+        eventData["notes"] = notesEditText.text.toString().trim()
+        eventData["reminder"] = reminderTextView.text.toString()
+
+        // In a real app, you would send this data to your backend
+        // For demonstration, we'll just show a success message
+        Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show()
+
+        // Close the activity
+        finish()
+    }
+}
