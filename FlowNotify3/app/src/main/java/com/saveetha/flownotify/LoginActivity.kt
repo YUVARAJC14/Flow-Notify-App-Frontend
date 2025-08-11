@@ -18,7 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var emailEditText: EditText
+    private lateinit var emailOrUsernameEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var signInButton: Button
     private lateinit var signUpButton: Button
@@ -36,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        emailEditText = findViewById(R.id.emailEditText)
+        emailOrUsernameEditText = findViewById(R.id.emailEditText)
         passwordEditText = findViewById(R.id.passwordEditText)
         signInButton = findViewById(R.id.signInButton)
         signUpButton = findViewById(R.id.signUpButton)
@@ -62,19 +62,13 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun login() {
-        val email = emailEditText.text.toString().trim()
+        val emailOrUsername = emailOrUsernameEditText.text.toString().trim()
         val password = passwordEditText.text.toString().trim()
 
         // Validate email and password
-        if (email.isEmpty()) {
-            emailEditText.error = "Email is required"
-            emailEditText.requestFocus()
-            return
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailEditText.error = "Please enter a valid email address"
-            emailEditText.requestFocus()
+        if (emailOrUsername.isEmpty()) {
+            emailOrUsernameEditText.error = "Email or username is required"
+            emailOrUsernameEditText.requestFocus()
             return
         }
 
@@ -93,7 +87,7 @@ class LoginActivity : AppCompatActivity() {
         signInButton.isEnabled = false
         signInButton.text = "Logging In..."
 
-        val request = LoginRequest(email, password)
+        val request = LoginRequest(emailOrUsername, password)
 
         apiService.login(request).enqueue(object : Callback<LoginResponse> {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
