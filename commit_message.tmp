@@ -1,0 +1,8 @@
+feat: Implement Profile section
+
+- Add fields to User model for profile information, app settings, and notification preferences.
+- Create Pydantic schemas for profile management.
+- Implement API endpoints for profile management (get, update, password change, settings, notifications, app info, feedback, logout).
+- Update CRUD operations for profile management.
+- Integrate profile router into the main application.
+- Add comprehensive tests for the new profile features.
