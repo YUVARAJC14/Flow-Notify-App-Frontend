@@ -99,7 +99,8 @@
             android:layout_height="56dp"
             android:backgroundTint="@color/blue"
             android:text="Sign up"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            app:cornerRadius="12dp" />
 
     </LinearLayout>
 </ScrollView>
