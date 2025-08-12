@@ -300,6 +300,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:layout_marginTop="24dp"
+                        android:backgroundTint="@color/blue"
                         android:text="Submit Feedback"
                         android:textAllCaps="false"
                         app:cornerRadius="8dp" />
