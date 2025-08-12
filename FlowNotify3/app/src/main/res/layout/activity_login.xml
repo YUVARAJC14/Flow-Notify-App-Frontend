@@ -80,7 +80,8 @@
             android:layout_height="56dp"
             android:backgroundTint="@color/blue"
             android:text="Sign In"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            app:cornerRadius="12dp" />
 
         <!-- OR Divider -->
         <TextView
