@@ -77,9 +77,8 @@
         <Button
             android:id="@+id/signInButton"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#2D60FF"
+            android:layout_height="56dp"
+            android:backgroundTint="@color/blue"
             android:text="Sign In"
             android:textColor="#FFFFFF" />
 
