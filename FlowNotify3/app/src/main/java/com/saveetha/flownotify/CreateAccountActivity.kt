@@ -196,7 +196,8 @@ class CreateAccountActivity : AppCompatActivity() {
 
                 if (response.isSuccessful) {
                     Toast.makeText(this@CreateAccountActivity, "Registration successful!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this@CreateAccountActivity, VerificationCompleteActivity::class.java)
+                    val intent = Intent(this@CreateAccountActivity, NameInputActivity::class.java)
+                    intent.putExtra("fullName", fullName) // Pass the full name
                     startActivity(intent)
                     overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                     finish()
