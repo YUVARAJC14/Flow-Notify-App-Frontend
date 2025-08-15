@@ -19,7 +19,7 @@ class OnboardingThreeActivity : AppCompatActivity() {
         // Set click listener for next button
         btnNext.setOnClickListener {
             // This is the last onboarding page, so navigate to main app
-            val intent = Intent(this, NameInputActivity::class.java)
+            val intent = Intent(this, HomeActivity::class.java)
             // If MainActivity doesn't exist yet, you might want to navigate
             // to another activity like HomeActivity or DashboardActivity
             startActivity(intent)
