@@ -52,6 +52,13 @@ class NameInputActivity : AppCompatActivity() {
         // Initially disable button until name is entered
         btnContinue.isEnabled = false
 
+        // Check if a name was passed from the previous activity (e.g., CreateAccountActivity)
+        val prefilledName = intent.getStringExtra("fullName")
+        if (!prefilledName.isNullOrEmpty()) {
+            editTextName.setText(prefilledName)
+            btnContinue.isEnabled = true // Enable button if pre-filled
+        }
+
         // Set up continue button click listener
         btnContinue.setOnClickListener {
             submitName()
