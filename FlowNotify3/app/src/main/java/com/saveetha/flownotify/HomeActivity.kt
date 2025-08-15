@@ -104,9 +104,9 @@ class HomeActivity : AppCompatActivity() {
 
     // Methods to load data from backend
     private fun loadUserData() {
-        // In a real app, this would make an API call to get user data
-        // For now, we'll just set a placeholder
-        greetingTextView.text = "Hello, User"
+        val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", Context.MODE_PRIVATE)
+        val userName = sharedPreferences.getString("user_name", "User")
+        greetingTextView.text = "Hello, $userName"
 
         // API call example (using retrofit or your preferred network library):
         /*
