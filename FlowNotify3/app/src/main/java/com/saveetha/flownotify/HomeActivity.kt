@@ -248,6 +248,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Refresh data when returning to this screen
+        loadUserData()
         loadUpcomingTasks()
         loadTodaysSchedule()
     }
