@@ -97,6 +97,10 @@ class LoginActivity : AppCompatActivity() {
 
                 if (response.isSuccessful) {
                     val loginResponse = response.body()
+                    val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", Context.MODE_PRIVATE)
+                    loginResponse?.user?.name?.let { name ->
+                        sharedPreferences.edit().putString("user_name", name).apply()
+                    }
                     // TODO: Save the access and refresh tokens securely
                     Toast.makeText(this@LoginActivity, "Login successful! Welcome ${loginResponse?.user?.name}", Toast.LENGTH_LONG).show()
                     // Navigate to the main activity
