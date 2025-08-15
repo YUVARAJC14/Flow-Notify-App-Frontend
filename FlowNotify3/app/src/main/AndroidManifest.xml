@@ -15,6 +15,24 @@
         android:theme="@style/Theme.FlowNotify"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".OtpVerificationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateNewPasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SecurityQuestionsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SmsVerificationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ResetLinkSentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".FeedbackActivity"
             android:exported="false" />
         <activity
