@@ -82,8 +82,7 @@ class NameInputActivity : AppCompatActivity() {
         // Navigate to the next screen in your app flow
         // This could be your main app screen or another onboarding screen
         val intent = Intent(this, HomeActivity::class.java)
-        // If this is the final onboarding screen, you might want to navigate
-        // directly to MainActivity instead
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
         startActivity(intent)
         finish()
     }
