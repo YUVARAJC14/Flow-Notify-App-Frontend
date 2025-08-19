@@ -139,12 +139,12 @@
                         android:textStyle="bold" />
 
                     <!-- Tasks list container - Will be populated from backend -->
-                    <LinearLayout
-                        android:id="@+id/upcoming_tasks_container"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/upcoming_tasks_recyclerview"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:orientation="vertical" />
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
                     <!-- Empty state for tasks -->
                     <LinearLayout

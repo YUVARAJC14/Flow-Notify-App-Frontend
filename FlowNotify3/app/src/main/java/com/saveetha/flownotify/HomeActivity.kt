@@ -7,23 +7,52 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.saveetha.flownotify.network.ApiService
+import com.saveetha.flownotify.network.TaskResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.Map
+
+import okhttp3.OkHttpClient
+import com.saveetha.flownotify.network.AuthInterceptor
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var greetingTextView: TextView
     private lateinit var dateTextView: TextView
     private lateinit var flowMessageTextView: TextView
-    private lateinit var upcomingTasksContainer: LinearLayout
+    private lateinit var upcomingTasksRecyclerView: RecyclerView
     private lateinit var emptyUpcomingTasks: LinearLayout
     private lateinit var scheduleContainer: LinearLayout
     private lateinit var emptySchedule: LinearLayout
     private lateinit var addTaskButton: Button
     private lateinit var addEventButton: Button
+
+    private lateinit var taskAdapter: TaskAdapter
+
+    private val apiService: ApiService by lazy {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(this))
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8000/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +74,17 @@ class HomeActivity : AppCompatActivity() {
         greetingTextView = findViewById(R.id.tv_greeting)
         dateTextView = findViewById(R.id.tv_date)
         flowMessageTextView = findViewById(R.id.tv_flow_message)
-        upcomingTasksContainer = findViewById(R.id.upcoming_tasks_container)
+        upcomingTasksRecyclerView = findViewById(R.id.upcoming_tasks_recyclerview)
         emptyUpcomingTasks = findViewById(R.id.empty_upcoming_tasks)
         scheduleContainer = findViewById(R.id.schedule_container)
         emptySchedule = findViewById(R.id.empty_schedule)
         addTaskButton = findViewById(R.id.btn_add_task)
         addEventButton = findViewById(R.id.btn_add_event)
+
+        // Setup RecyclerView for upcoming tasks
+        taskAdapter = TaskAdapter(emptyList())
+        upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
+        upcomingTasksRecyclerView.adapter = taskAdapter
     }
 
     private fun setupCurrentDate() {
@@ -155,44 +189,48 @@ class HomeActivity : AppCompatActivity() {
         */
     }
 
-    private fun loadUpcomingTasks() {
-        // In a real app, this would make an API call to get upcoming tasks
-        // For now, we'll just display the empty state
-        upcomingTasksContainer.visibility = View.GONE
-        emptyUpcomingTasks.visibility = View.VISIBLE
-
-        // API call example:
-        /*
-        apiService.getUpcomingTasks().enqueue(object : Callback<List<Task>> {
-            override fun onResponse(call: Call<List<Task>>, response: Response<List<Task>>) {
+private fun loadUpcomingTasks() {
+    apiService.getTasks(filter = "upcoming").enqueue(
+        object : Callback<Map<String, List<TaskResponse>>> {
+            override fun onResponse(
+                call: Call<Map<String, List<TaskResponse>>>,
+                response: Response<Map<String, List<TaskResponse>>>
+            ) {
                 if (response.isSuccessful) {
-                    val tasks = response.body()
-                    if (tasks.isNullOrEmpty()) {
-                        upcomingTasksContainer.visibility = View.GONE
+                    val tasksMap = response.body()
+                    val upcomingTasks = tasksMap?.get("upcoming") ?: emptyList()
+
+                    if (upcomingTasks.isEmpty()) {
+                        upcomingTasksRecyclerView.visibility = View.GONE
                         emptyUpcomingTasks.visibility = View.VISIBLE
                     } else {
-                        upcomingTasksContainer.visibility = View.VISIBLE
+                        upcomingTasksRecyclerView.visibility = View.VISIBLE
                         emptyUpcomingTasks.visibility = View.GONE
-
-                        // Clear previous views
-                        upcomingTasksContainer.removeAllViews()
-
-                        // Add task items
-                        for (task in tasks) {
-                            val taskView = createTaskView(task)
-                            upcomingTasksContainer.addView(taskView)
-                        }
+                        taskAdapter.updateTasks(upcomingTasks)
                     }
+                } else {
+                    Toast.makeText(
+                        this@HomeActivity,
+                        "Failed to load tasks: ${response.errorBody()?.string()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    upcomingTasksRecyclerView.visibility = View.GONE
+                    emptyUpcomingTasks.visibility = View.VISIBLE
                 }
             }
 
-            override fun onFailure(call: Call<List<Task>>, t: Throwable) {
-                // Handle error
+            override fun onFailure(call: Call<Map<String, List<TaskResponse>>>, t: Throwable) {
+                Toast.makeText(
+                    this@HomeActivity,
+                    "Network error: ${t.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                upcomingTasksRecyclerView.visibility = View.GONE
+                emptyUpcomingTasks.visibility = View.VISIBLE
             }
-        })
-        */
-    }
-
+        }
+    )
+}
     private fun loadTodaysSchedule() {
         // In a real app, this would make an API call to get today's schedule
         // For now, we'll just display the empty state

@@ -7,8 +7,9 @@ from ..database.database import get_db
 from ..security import get_current_user
 
 router = APIRouter(
-    prefix="/api/v1/tasks",
+    prefix="/tasks",
     tags=["tasks"],
+    dependencies=[Depends(get_current_user)]
 )
 
 @router.post("/", response_model=schemas.Task, status_code=status.HTTP_201_CREATED)
@@ -28,17 +29,18 @@ def read_tasks(
 ):
     return crud.get_tasks(db=db, user_id=current_user.id, search=search, date_filter=filter)
 
-@router.put("/{task_id}", response_model=schemas.Task)
+
+@router.patch("/{task_id}", response_model=schemas.Task)
 def update_task(
     task_id: int,
-    task: schemas.TaskCreate,
+    task_update: schemas.TaskPartialUpdate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
-    return crud.update_task(db=db, task=db_task, task_update=task)
+    return crud.update_task(db=db, task=db_task, task_update=task_update)
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(
@@ -48,18 +50,6 @@ def delete_task(
 ):
     db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
     if not db_task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=4.04, detail="Task not found")
     crud.delete_task(db=db, task=db_task)
     return
-
-@router.patch("/{task_id}", response_model=schemas.Task)
-def update_task_status(
-    task_id: int,
-    task_update: schemas.TaskUpdate,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
-    if not db_task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return crud.update_task(db=db, task=db_task, task_update=task_update)

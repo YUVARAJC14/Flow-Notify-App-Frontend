@@ -2,7 +2,10 @@ package com.saveetha.flownotify.network
 
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
+import java.util.Map
 
 interface ApiService {
     @POST("api/auth/register")
@@ -11,6 +14,10 @@ interface ApiService {
     @POST("api/auth/login")
     fun login(@Body request: LoginRequest): Call<LoginResponse>
 
-    @POST("api/tasks")
+    @POST("api/v1/tasks/")
     fun createTask(@Body request: CreateTaskRequest): Call<TaskResponse>
+
+    @GET("api/tasks") // Or your actual endpoint
+    fun getTasks(@Query("filter") filter: String): Call<Map<String, List<TaskResponse>>>
+
 }

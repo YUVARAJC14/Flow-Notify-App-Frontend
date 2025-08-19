@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.responses import JSONResponse
 from .database.database import init_db
-from .routers import users, tasks, dashboard, events, insights, profile, auth
+from .routers import users, tasks, dashboard, events, insights, auth
 from . import models
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,7 +21,9 @@ def create_app():
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url="/redoc",
+        
     )
+
 
     app.add_middleware(
         CORSMiddleware,
@@ -30,13 +33,15 @@ def create_app():
         allow_headers=["*"],
     )
 
-    app.include_router(auth.router)
-    app.include_router(users.router)
-    app.include_router(tasks.router)
-    app.include_router(dashboard.router)
-    app.include_router(events.router)
-    app.include_router(insights.router)
-    app.include_router(profile.router)
+    api_router = APIRouter(prefix="/api/v1")
+    api_router.include_router(auth.router)
+    api_router.include_router(users.router)
+    api_router.include_router(tasks.router)
+    api_router.include_router(dashboard.router)
+    api_router.include_router(events.router)
+    api_router.include_router(insights.router)
+
+    app.include_router(api_router)
 
     @app.get("/")
     def read_root():

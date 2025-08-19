@@ -22,6 +22,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import okhttp3.OkHttpClient
+import com.saveetha.flownotify.network.AuthInterceptor
 
 class NewTaskActivity : AppCompatActivity() {
 
@@ -40,9 +42,15 @@ class NewTaskActivity : AppCompatActivity() {
     private var hasSetDate = false
     private var hasSetTime = false
 
+
     private val apiService: ApiService by lazy {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(this))
+            .build()
+
         Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8000/")
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

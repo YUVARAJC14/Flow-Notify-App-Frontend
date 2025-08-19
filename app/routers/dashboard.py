@@ -6,8 +6,8 @@ from ..database.database import get_db
 from ..security import get_current_user
 
 router = APIRouter(
-    prefix="/api/v1",
     tags=["dashboard"],
+    dependencies=[Depends(get_current_user)]
 )
 
 @router.get("/dashboard", response_model=schemas_dashboard.DashboardData)

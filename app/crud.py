@@ -88,7 +88,15 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
     elif date_filter == "completed":
         query = query.filter(models.Task.completed == True)
 
-    return query.order_by(models.Task.due_date).all()
+    tasks = query.order_by(models.Task.due_date).all()
+    
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    
+    today_tasks = [task for task in tasks if task.due_date == today]
+    tomorrow_tasks = [task for task in tasks if task.due_date == tomorrow]
+
+    return {"today": today_tasks, "tomorrow": tomorrow_tasks}
 
 def get_task_by_id(db: Session, task_id: int, user_id: int):
     return db.query(models.Task).filter(and_(models.Task.id == task_id, models.Task.owner_id == user_id)).first()
@@ -249,6 +257,13 @@ def update_user_profile(db: Session, user: models.User, profile_update: schemas_
 
 def update_user_password(db: Session, user: models.User, hashed_password: str):
     user.hashed_password = hashed_password
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_user_settings(db: Session, user: models.User, settings_update: schemas_all.AppSettingsUpdate):
+    for key, value in settings_update.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
     db.commit()
     db.refresh(user)
     return user

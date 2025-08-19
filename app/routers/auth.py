@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from .. import crud
 from ..schemas import schemas
 from ..database.database import get_db
-from ..security import create_access_token, create_refresh_token
+from ..security import create_access_token, create_refresh_token, get_current_user
 from ..auth_utils import verify_password
 
 router = APIRouter(
-    prefix="/api/auth",
+    prefix="/auth",
     tags=["auth"],
 )
 
@@ -21,9 +22,9 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return {"message": "Registration successful. Please check your email to verify your account."}
 
 @router.post("/login", response_model=schemas.LoginResponse)
-def login(login_request: schemas.LoginRequest, db: Session = Depends(get_db)):
-    user = crud.get_user_by_email_or_username(db, identifier=login_request.emailOrUsername)
-    if not user or not verify_password(login_request.password, user.hashed_password):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = crud.get_user_by_email(db, email=form_data.username)
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -31,11 +32,10 @@ def login(login_request: schemas.LoginRequest, db: Session = Depends(get_db)):
         )
     
     access_token = create_access_token(data={"sub": user.email})
-    refresh_token = create_refresh_token(data={"sub": user.email})
-    
+
     return schemas.LoginResponse(
-        accessToken=access_token,
-        refreshToken=refresh_token,
+        access_token=access_token,
+        token_type="bearer",
         user=schemas.User(
             id=user.id,
             email=user.email,
@@ -73,6 +73,6 @@ def reset_password(data: schemas.ResetPasswordSchema, db: Session = Depends(get_
     return {"message": "Password has been reset successfully."}
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-def logout():
+def logout(current_user: schemas.User = Depends(get_current_user)):
     # In a real app, this would invalidate the user's session or tokens.
     return {"message": "Logged out successfully."}

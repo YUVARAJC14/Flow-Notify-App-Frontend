@@ -81,7 +81,7 @@ class NameInputActivity : AppCompatActivity() {
 
         // Navigate to the next screen in your app flow
         // This could be your main app screen or another onboarding screen
-        val intent = Intent(this, HomeActivity::class.java)
+        val intent = Intent(this, VerificationCompleteActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
         startActivity(intent)
         finish()

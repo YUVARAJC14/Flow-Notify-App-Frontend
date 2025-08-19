@@ -21,7 +21,7 @@ class User(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
-    emailOrUsername: str
+    email: str
     password: str
 
 class Token(BaseModel):
@@ -30,15 +30,18 @@ class Token(BaseModel):
     token_type: str
 
 class LoginResponse(BaseModel):
-    accessToken: str
-    refreshToken: str
+    access_token: str
     user: User
+    token_type: str
 
 
 class UserProfileUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     profile_picture_url: Optional[str] = None
+
+class UserNameUpdate(BaseModel):
+    name: str
 
 class PasswordChange(BaseModel):
     current_password: str
@@ -118,6 +121,22 @@ class Task(TaskBase):
 
 class TaskUpdate(BaseModel):
     completed: bool
+
+
+class TaskPartialUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[date] = None
+    due_time: Optional[time] = None
+    priority: Optional[PriorityEnum] = None
+    reminder: Optional[ReminderEnum] = None
+    completed: Optional[bool] = None
+    recurrence_rule: Optional[str] = None
+    recurrence_end_date: Optional[date] = None
+    goal_id: Optional[int] = None
+    parent_id: Optional[int] = None
+
+
 
 class TaskListGrouped(BaseModel):
     today: List[Task]
