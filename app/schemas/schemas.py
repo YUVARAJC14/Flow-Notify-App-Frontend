@@ -3,31 +3,35 @@ from datetime import date, time, datetime
 from typing import Optional, List
 from enum import Enum
 
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
+    email: EmailStr
+    profile_picture_url: Optional[str] = None
+    theme: Optional[str] = "light"
+    language: Optional[str] = "en"
+    email_notifications_enabled: bool = True
+    push_notifications_enabled: bool = True
+
+
+class UserCreate(UserBase):
     fullName: str
-    email: str
     password: str
 
-class UserBase(BaseModel):
-    email: str
 
 class User(UserBase):
     id: int
-    profile_picture_url: Optional[str] = None
-    theme: Optional[str] = None
-    language: Optional[str] = None
-    email_notifications_enabled: Optional[bool] = None
-    push_notifications_enabled: Optional[bool] = None
     model_config = ConfigDict(from_attributes=True)
 
+
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
 
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+
 
 class LoginResponse(BaseModel):
     access_token: str

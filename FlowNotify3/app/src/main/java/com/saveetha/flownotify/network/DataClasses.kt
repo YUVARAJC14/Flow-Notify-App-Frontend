@@ -12,13 +12,13 @@ data class RegisterResponse(
 )
 
 data class LoginRequest(
-    val emailOrUsername: String,
+    val email: String,
     val password: String
 )
 
 data class LoginResponse(
-    val accessToken: String,
-    val refreshToken: String,
+    val access_token: String,
+    val token_type: String,
     val user: User
 )
 

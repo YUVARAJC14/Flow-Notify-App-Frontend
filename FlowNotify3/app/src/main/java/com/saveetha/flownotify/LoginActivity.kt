@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
 
     private val apiService: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
+            .baseUrl("http://10.0.2.2:8000")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)
@@ -101,10 +101,10 @@ class LoginActivity : AppCompatActivity() {
                     loginResponse?.user?.name?.let { name ->
                         sharedPreferences.edit().putString("user_name", name).apply()
                     }
-                    loginResponse?.accessToken?.let { token ->
+                    loginResponse?.access_token?.let { token ->
                         sharedPreferences.edit().putString("access_token", token).apply()
                     }
-                    // TODO: Save the access and refresh tokens securely
+                    // TODO: Save the access tokens securely
                     Toast.makeText(this@LoginActivity, "Login successful! Welcome ${loginResponse?.user?.name}", Toast.LENGTH_LONG).show()
                     // Navigate to the main activity
                     val intent = Intent(this@LoginActivity, HomeActivity::class.java)

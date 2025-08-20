@@ -13,11 +13,10 @@ def test_register_duplicate_email(client: TestClient):
 
 def test_login(client: TestClient):
     client.post("/api/v1/auth/register", json={"fullName": "Test User", "email": "test@example.com", "password": "testpassword"})
-    response = client.post("/api/v1/auth/login", json={"emailOrUsername": "test@example.com", "password": "testpassword"})
+    response = client.post("/api/v1/auth/login", json={"email": "test@example.com", "password": "testpassword"})
     assert response.status_code == 200
     data = response.json()
-    assert "accessToken" in data
-    assert "refreshToken" in data
+    assert "access_token" in data
     assert data["user"]["email"] == "test@example.com"
 
 def test_login_incorrect_password(client: TestClient):

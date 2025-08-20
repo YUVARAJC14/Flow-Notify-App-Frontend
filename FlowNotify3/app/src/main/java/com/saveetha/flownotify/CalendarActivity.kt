@@ -6,9 +6,11 @@ import android.view.Gravity
 import android.view.View
 import android.widget.GridLayout
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
@@ -24,6 +26,9 @@ class CalendarActivity : AppCompatActivity() {
     private lateinit var btnNextMonth: ImageButton
     private var currentMonth = Calendar.getInstance()
     private var selectedDate = Calendar.getInstance()
+    private lateinit var scheduleScrollView: NestedScrollView
+    private lateinit var scheduleContainer: LinearLayout
+    private lateinit var noEventsTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +38,7 @@ class CalendarActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupListeners()
         generateCalendar()
+        updateEventsForSelectedDate()
     }
 
     private fun initViews() {
@@ -40,6 +46,9 @@ class CalendarActivity : AppCompatActivity() {
         calendarGrid = findViewById(R.id.calendar_grid)
         btnPrevMonth = findViewById(R.id.btn_prev_month)
         btnNextMonth = findViewById(R.id.btn_next_month)
+        scheduleScrollView = findViewById(R.id.schedule_scroll_view)
+        scheduleContainer = findViewById(R.id.schedule_container)
+        noEventsTextView = findViewById(R.id.tv_no_events)
     }
 
     private fun setupListeners() {
@@ -180,7 +189,7 @@ class CalendarActivity : AppCompatActivity() {
                     generateCalendar()
 
                     // Update events for the selected day
-                    // updateEventsForSelectedDate()
+                    updateEventsForSelectedDate()
                 }
             }
         }
@@ -199,5 +208,23 @@ class CalendarActivity : AppCompatActivity() {
     // In a real app, this method would fetch events for the selected date from backend
     private fun updateEventsForSelectedDate() {
         // API call to get events for the selected date
+        // For now, we'll simulate an empty list.
+        val events = emptyList<Any>() // Replace with your Event class
+
+        if (events.isEmpty()) {
+            scheduleScrollView.visibility = View.GONE
+            noEventsTextView.visibility = View.VISIBLE
+        } else {
+            scheduleScrollView.visibility = View.VISIBLE
+            noEventsTextView.visibility = View.GONE
+            scheduleContainer.removeAllViews()
+            // In a real app, you would loop through events and add them to scheduleContainer
+            // For example:
+            // for (event in events) {
+            //     val eventView = layoutInflater.inflate(R.layout.item_event, scheduleContainer, false)
+            //     // ... bind event data to eventView ...
+            //     scheduleContainer.addView(eventView)
+            // }
+        }
     }
 }
