@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from .. import crud
 from ..schemas import schemas
 from ..database.database import get_db
-from ..security import create_access_token, create_refresh_token, get_current_user
+from ..security import create_access_token, get_current_user
 from ..auth_utils import verify_password
 
 router = APIRouter(
@@ -20,6 +21,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db=db, user=user)
     return {"message": "Registration successful. Please check your email to verify your account."}
 
+
 @router.post("/login", response_model=schemas.LoginResponse)
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = crud.get_user_by_email(db, email=login_data.email)
@@ -32,19 +34,37 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     
     access_token = create_access_token(data={"sub": user.email})
 
+    user_data = schemas.User(
+        id=user.id,
+        email=user.email,
+        profile_picture_url=getattr(user, 'profile_picture_url', None),
+        theme=getattr(user, 'theme', 'light'),
+        language=getattr(user, 'language', 'en'),
+        email_notifications_enabled=getattr(user, 'email_notifications_enabled', True),
+        push_notifications_enabled=getattr(user, 'push_notifications_enabled', True)
+    )
+
     return schemas.LoginResponse(
         access_token=access_token,
         token_type="bearer",
-        user=schemas.User(
-            id=user.id,
-            email=user.email,
-            profile_picture_url=user.profile_picture_url,
-            theme=user.theme,
-            language=user.language,
-            email_notifications_enabled=user.email_notifications_enabled,
-            push_notifications_enabled=user.push_notifications_enabled
-        )
+        user=user_data
     )
+
+
+@router.post("/token", response_model=schemas.Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = crud.get_user_by_email(db, email=form_data.username)
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = create_access_token(data={"sub": user.email})
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 def forgot_password(data: schemas.ForgotPasswordSchema, db: Session = Depends(get_db)):
