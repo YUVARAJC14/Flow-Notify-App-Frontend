@@ -3,29 +3,28 @@ package com.saveetha.flownotify
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.saveetha.flownotify.network.ApiService
-import com.saveetha.flownotify.network.TaskResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.saveetha.flownotify.network.AuthInterceptor
+import com.saveetha.flownotify.network.ScheduleEvent
+import com.saveetha.flownotify.network.UpcomingTask
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import java.util.Map
-
-import okhttp3.OkHttpClient
-import com.saveetha.flownotify.network.AuthInterceptor
 
 class HomeActivity : AppCompatActivity() {
 
@@ -39,7 +38,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var addTaskButton: Button
     private lateinit var addEventButton: Button
 
-    private lateinit var taskAdapter: TaskAdapter
+    private lateinit var upcomingTaskAdapter: UpcomingTaskAdapter
 
     private val apiService: ApiService by lazy {
         val client = OkHttpClient.Builder()
@@ -63,11 +62,7 @@ class HomeActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupListeners()
 
-        // These methods would fetch data from your backend
-        loadUserData()
-        loadFlowData()
-        loadUpcomingTasks()
-        loadTodaysSchedule()
+        loadInitialData()
     }
 
     private fun initViews() {
@@ -82,9 +77,9 @@ class HomeActivity : AppCompatActivity() {
         addEventButton = findViewById(R.id.btn_add_event)
 
         // Setup RecyclerView for upcoming tasks
-        taskAdapter = TaskAdapter(emptyList())
+        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList())
         upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
-        upcomingTasksRecyclerView.adapter = taskAdapter
+        upcomingTasksRecyclerView.adapter = upcomingTaskAdapter
     }
 
     private fun setupCurrentDate() {
@@ -137,158 +132,90 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    // Methods to load data from backend
+    private fun loadInitialData() {
+        loadUserData()
+        loadDashboardSummary()
+    }
+
     private fun loadUserData() {
         val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", Context.MODE_PRIVATE)
         val userName = sharedPreferences.getString("user_name", "User")
         greetingTextView.text = "Hello, $userName"
-
-        // API call example (using retrofit or your preferred network library):
-        /*
-        apiService.getUserProfile().enqueue(object : Callback<UserProfile> {
-            override fun onResponse(call: Call<UserProfile>, response: Response<UserProfile>) {
-                if (response.isSuccessful) {
-                    val user = response.body()
-                    user?.let {
-                        greetingTextView.text = "Hello, ${it.firstName}"
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<UserProfile>, t: Throwable) {
-                // Handle error
-            }
-        })
-        */
     }
 
-    private fun loadFlowData() {
-        // In a real app, this would make an API call to get flow data
-        // For now, we'll just set placeholders
-        flowMessageTextView.text = "Loading..."
-
-        // The actual progress circle would be created dynamically based on backend data
-        // API call example:
-        /*
-        apiService.getTodaysFlow().enqueue(object : Callback<FlowData> {
-            override fun onResponse(call: Call<FlowData>, response: Response<FlowData>) {
+    private fun loadDashboardSummary() {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.getDashboardSummary()
                 if (response.isSuccessful) {
-                    val flowData = response.body()
-                    flowData?.let {
-                        flowMessageTextView.text = it.message
-                        // Create and display progress circle with it.percentage
-                        setupProgressCircle(it.percentage)
-                    }
-                }
-            }
+                    val summary = response.body()
+                    summary?.let {
+                        // Update Today's Flow
+                        flowMessageTextView.text = "You have ${it.todaysFlow.percentage}% flow today!"
 
-            override fun onFailure(call: Call<FlowData>, t: Throwable) {
-                // Handle error
-            }
-        })
-        */
-    }
+                        // Update Upcoming Tasks
+                        updateUpcomingTasks(it.upcomingTasks)
 
-private fun loadUpcomingTasks() {
-    apiService.getTasks(filter = "upcoming").enqueue(
-        object : Callback<Map<String, List<TaskResponse>>> {
-            override fun onResponse(
-                call: Call<Map<String, List<TaskResponse>>>,
-                response: Response<Map<String, List<TaskResponse>>>
-            ) {
-                if (response.isSuccessful) {
-                    val tasksMap = response.body()
-                    val upcomingTasks = tasksMap?.get("upcoming") ?: emptyList()
-
-                    if (upcomingTasks.isEmpty()) {
-                        upcomingTasksRecyclerView.visibility = View.GONE
-                        emptyUpcomingTasks.visibility = View.VISIBLE
-                    } else {
-                        upcomingTasksRecyclerView.visibility = View.VISIBLE
-                        emptyUpcomingTasks.visibility = View.GONE
-                        taskAdapter.updateTasks(upcomingTasks)
+                        // Update Today's Schedule
+                        updateTodaysSchedule(it.todaysSchedule)
                     }
                 } else {
-                    Toast.makeText(
-                        this@HomeActivity,
-                        "Failed to load tasks: ${response.errorBody()?.string()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    upcomingTasksRecyclerView.visibility = View.GONE
-                    emptyUpcomingTasks.visibility = View.VISIBLE
+                    showError("Failed to load dashboard data: ${response.errorBody()?.string()}")
                 }
-            }
-
-            override fun onFailure(call: Call<Map<String, List<TaskResponse>>>, t: Throwable) {
-                Toast.makeText(
-                    this@HomeActivity,
-                    "Network error: ${t.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                upcomingTasksRecyclerView.visibility = View.GONE
-                emptyUpcomingTasks.visibility = View.VISIBLE
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
             }
         }
-    )
-}
-    private fun loadTodaysSchedule() {
-        // In a real app, this would make an API call to get today's schedule
-        // For now, we'll just display the empty state
+    }
+
+    private fun updateUpcomingTasks(tasks: List<UpcomingTask>) {
+        if (tasks.isEmpty()) {
+            upcomingTasksRecyclerView.visibility = View.GONE
+            emptyUpcomingTasks.visibility = View.VISIBLE
+        } else {
+            upcomingTasksRecyclerView.visibility = View.VISIBLE
+            emptyUpcomingTasks.visibility = View.GONE
+            upcomingTaskAdapter.updateTasks(tasks)
+        }
+    }
+
+    private fun updateTodaysSchedule(events: List<ScheduleEvent>) {
+        if (events.isEmpty()) {
+            scheduleContainer.visibility = View.GONE
+            emptySchedule.visibility = View.VISIBLE
+        } else {
+            scheduleContainer.visibility = View.VISIBLE
+            emptySchedule.visibility = View.GONE
+            scheduleContainer.removeAllViews()
+
+            val inflater = LayoutInflater.from(this)
+            for (event in events) {
+                val eventView = inflater.inflate(R.layout.item_event, scheduleContainer, false)
+                val titleTextView = eventView.findViewById<TextView>(R.id.event_title)
+                val timeTextView = eventView.findViewById<TextView>(R.id.event_time)
+                val locationTextView = eventView.findViewById<TextView>(R.id.event_location)
+
+                titleTextView.text = event.title
+                timeTextView.text = event.time
+                locationTextView.text = event.location
+
+                scheduleContainer.addView(eventView)
+            }
+        }
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        // Show empty states as a fallback
+        upcomingTasksRecyclerView.visibility = View.GONE
+        emptyUpcomingTasks.visibility = View.VISIBLE
         scheduleContainer.visibility = View.GONE
         emptySchedule.visibility = View.VISIBLE
-
-        // API call example:
-        /*
-        apiService.getTodaysSchedule().enqueue(object : Callback<List<Event>> {
-            override fun onResponse(call: Call<List<Event>>, response: Response<List<Event>>) {
-                if (response.isSuccessful) {
-                    val events = response.body()
-                    if (events.isNullOrEmpty()) {
-                        scheduleContainer.visibility = View.GONE
-                        emptySchedule.visibility = View.VISIBLE
-                    } else {
-                        scheduleContainer.visibility = View.VISIBLE
-                        emptySchedule.visibility = View.GONE
-
-                        // Clear previous views
-                        scheduleContainer.removeAllViews()
-
-                        // Add event items
-                        for (event in events) {
-                            val eventView = createEventView(event)
-                            scheduleContainer.addView(eventView)
-                        }
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<List<Event>>, t: Throwable) {
-                // Handle error
-            }
-        })
-        */
     }
-
-    // These methods would create views for tasks and events in a real app
-    /*
-    private fun createTaskView(task: Task): View {
-        val view = layoutInflater.inflate(R.layout.item_task, null)
-        // Bind task data to view
-        return view
-    }
-
-    private fun createEventView(event: Event): View {
-        val view = layoutInflater.inflate(R.layout.item_event, null)
-        // Bind event data to view
-        return view
-    }
-    */
 
     override fun onResume() {
         super.onResume()
         // Refresh data when returning to this screen
-        loadUserData()
-        loadUpcomingTasks()
-        loadTodaysSchedule()
+        loadInitialData()
     }
 }

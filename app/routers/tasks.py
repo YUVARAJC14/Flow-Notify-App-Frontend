@@ -7,9 +7,8 @@ from ..database.database import get_db
 from ..security import get_current_user
 
 router = APIRouter(
-    prefix="/tasks",
-    tags=["tasks"],
-    dependencies=[Depends(get_current_user)]
+    prefix="/v1/tasks",
+    tags=["tasks"]
 )
 
 @router.post("/", response_model=schemas.Task, status_code=status.HTTP_201_CREATED)

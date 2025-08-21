@@ -10,6 +10,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.saveetha.flownotify.network.ApiService
+import com.saveetha.flownotify.network.AuthInterceptor
+import com.saveetha.flownotify.network.CreateEventRequest
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -37,6 +45,19 @@ class NewEventActivity : AppCompatActivity() {
     private var startTimeMinute: Int = 0
     private var endTimeHour: Int = 11
     private var endTimeMinute: Int = 0
+
+    private val apiService: ApiService by lazy {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(this))
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8000/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -244,45 +265,65 @@ class NewEventActivity : AppCompatActivity() {
 
     private fun showReminderOptions() {
         // Here you would show a dialog or dropdown with reminder options
-        // For simplicity, we'll just cycle through some options
-        val currentReminder = reminderTextView.text.toString()
         val reminderOptions = listOf(
+            "No reminder",
+            "5 minutes before",
             "15 minutes before",
             "30 minutes before",
             "1 hour before",
             "2 hours before",
             "1 day before"
         )
-
+        // In a real app, you would show a dialog here.
+        // For simplicity, we'll just cycle through.
+        val currentReminder = reminderTextView.text.toString()
         val currentIndex = reminderOptions.indexOf(currentReminder)
         val nextIndex = (currentIndex + 1) % reminderOptions.size
-
         reminderTextView.text = reminderOptions[nextIndex]
     }
 
+    private fun getReminderInMinutes(): Int {
+        return when (reminderTextView.text.toString()) {
+            "5 minutes before" -> 5
+            "15 minutes before" -> 15
+            "30 minutes before" -> 30
+            "1 hour before" -> 60
+            "2 hours before" -> 120
+            "1 day before" -> 1440
+            else -> 0
+        }
+    }
+
     private fun saveEvent() {
-        // Validate form
-        if (eventTitleEditText.text.toString().trim().isEmpty()) {
+        val title = eventTitleEditText.text.toString().trim()
+        if (title.isEmpty()) {
             Toast.makeText(this, "Please enter an event title", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Prepare event data
-        val eventData = HashMap<String, Any>()
-        eventData["title"] = eventTitleEditText.text.toString().trim()
-        eventData["location"] = locationEditText.text.toString().trim()
-        eventData["date"] = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
-        eventData["startTime"] = String.format("%02d:%02d", startTimeHour, startTimeMinute)
-        eventData["endTime"] = String.format("%02d:%02d", endTimeHour, endTimeMinute)
-        eventData["category"] = selectedCategory
-        eventData["notes"] = notesEditText.text.toString().trim()
-        eventData["reminder"] = reminderTextView.text.toString()
+        val request = CreateEventRequest(
+            title = title,
+            location = locationEditText.text.toString().trim(),
+            date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time),
+            startTime = String.format("%02d:%02d", startTimeHour, startTimeMinute),
+            endTime = String.format("%02d:%02d", endTimeHour, endTimeMinute),
+            category = selectedCategory,
+            notes = notesEditText.text.toString().trim(),
+            reminder = getReminderInMinutes()
+        )
 
-        // In a real app, you would send this data to your backend
-        // For demonstration, we'll just show a success message
-        Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show()
-
-        // Close the activity
-        finish()
+        lifecycleScope.launch {
+            try {
+                val response = apiService.createEvent(request)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@NewEventActivity, "Event created successfully", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this@NewEventActivity, "Failed to create event: ${response.errorBody()?.string()}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@NewEventActivity, "Error creating event: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

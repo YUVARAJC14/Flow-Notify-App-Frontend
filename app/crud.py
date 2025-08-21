@@ -173,20 +173,23 @@ def get_today_progress(db: Session, user_id: int) -> float:
         return 100.0  # If no tasks, consider 100% complete
     return (completed_tasks_today / total_tasks_today) * 100
 
-def get_upcoming_tasks(db: Session, user_id: int):
+def get_upcoming_tasks(db: Session, user_id: int, limit: int = 3):
     today = date.today()
     return db.query(models.Task).filter(
         models.Task.owner_id == user_id,
-        models.Task.due_date > today,
+        models.Task.due_date >= today,
         models.Task.completed == False
-    ).order_by(models.Task.due_date).all()
+    ).order_by(models.Task.due_date, models.Task.due_time).limit(limit).all()
 
 def get_today_schedule(db: Session, user_id: int):
     today = date.today()
-    return db.query(models.Task).filter(
-        models.Task.owner_id == user_id,
-        models.Task.due_date == today
-    ).order_by(models.Task.due_time).all()
+    start_of_day = datetime.combine(today, datetime.min.time())
+    end_of_day = datetime.combine(today, datetime.max.time())
+    return db.query(models.Event).filter(
+        models.Event.owner_id == user_id,
+        models.Event.start_datetime >= start_of_day,
+        models.Event.start_datetime <= end_of_day
+    ).order_by(models.Event.start_datetime).all()
 
 def get_tasks_by_date(db: Session, user_id: int, task_date: date):
     return db.query(models.Task).filter(models.Task.owner_id == user_id, models.Task.due_date == task_date).all()
@@ -201,16 +204,17 @@ def get_tasks_due_in_days(db: Session, user_id: int, days: int):
     ).all()
 
 def create_user_event(db: Session, event: schemas_all.EventCreate, user_id: int):
+    start_datetime = datetime.combine(event.date, event.startTime)
+    end_datetime = datetime.combine(event.date, event.endTime)
+
     db_event = models.Event(
         title=event.title,
         location=event.location,
-        start_datetime=event.start_datetime,
-        end_datetime=event.end_datetime,
+        start_datetime=start_datetime,
+        end_datetime=end_datetime,
         category=event.category,
         notes=event.notes,
-        reminder_minutes_before=event.reminder_minutes_before,
-        recurrence_rule=event.recurrence_rule,
-        recurrence_end_date=event.recurrence_end_date,
+        reminder_minutes_before=event.reminder,
         owner_id=user_id
     )
     db.add(db_event)
@@ -239,10 +243,6 @@ def update_event(db: Session, event: models.Event, event_update: schemas_all.Eve
     db.commit()
     db.refresh(event)
     return event
-
-def delete_event(db: Session, event: models.Event):
-    db.delete(event)
-    db.commit()
 
 def delete_event(db: Session, event: models.Event):
     db.delete(event)

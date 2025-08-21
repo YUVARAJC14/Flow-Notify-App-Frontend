@@ -1,5 +1,7 @@
 package com.saveetha.flownotify.network
 
+import com.google.gson.annotations.SerializedName
+
 data class RegisterRequest(
     val fullName: String,
     val email: String,
@@ -47,4 +49,43 @@ data class TaskResponse(
     val reminders: List<String>,
     val isCompleted: Boolean,
     val createdAt: String
+)
+
+// Data classes for Events
+
+data class CreateEventRequest(
+    val title: String,
+    val location: String?,
+    val date: String, // "YYYY-MM-DD"
+    val startTime: String, // "HH:mm"
+    val endTime: String, // "HH:mm"
+    val category: String,
+    val notes: String?,
+    val reminder: Int // in minutes before
+)
+
+// Data classes for Dashboard Summary Response
+
+data class DashboardSummaryResponse(
+    val todaysFlow: TodaysFlow,
+    val upcomingTasks: List<UpcomingTask>,
+    val todaysSchedule: List<ScheduleEvent>
+)
+
+data class TodaysFlow(
+    val percentage: Int
+)
+
+data class UpcomingTask(
+    val id: String,
+    val title: String,
+    val time: String,
+    val priority: String
+)
+
+data class ScheduleEvent(
+    val id: String,
+    val title: String,
+    val time: String,
+    val location: String
 )

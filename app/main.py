@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends
 from fastapi.responses import JSONResponse
 from .database.database import init_db
 from .routers import users, tasks, dashboard, events, insights, auth
 from . import models
+from .security import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,9 +21,7 @@ def create_app():
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url="/redoc",
-        
     )
-
 
     app.add_middleware(
         CORSMiddleware,
@@ -33,14 +31,19 @@ def create_app():
         allow_headers=["*"],
     )
 
-    api_router = APIRouter(prefix="/api")
-    api_router.include_router(auth.router)
+    # Router for authentication endpoints (no security dependency)
+    auth_router = APIRouter(prefix="/api")
+    auth_router.include_router(auth.router)
+
+    # Router for all other API endpoints (with security dependency)
+    api_router = APIRouter(prefix="/api", dependencies=[Depends(get_current_user)])
     api_router.include_router(users.router)
     api_router.include_router(tasks.router)
     api_router.include_router(dashboard.router)
     api_router.include_router(events.router)
     api_router.include_router(insights.router)
 
+    app.include_router(auth_router)
     app.include_router(api_router)
 
     @app.get("/")
@@ -50,7 +53,6 @@ def create_app():
     return app
 
 app = create_app()
-
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request, exc):
