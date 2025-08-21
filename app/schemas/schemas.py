@@ -107,15 +107,10 @@ class TaskBase(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    due_date: Optional[date] = None
-    due_time: Optional[time] = None
-    priority: Optional[PriorityEnum] = PriorityEnum.medium
-    reminder: Optional[ReminderEnum] = None
-    completed: bool = False
-    recurrence_rule: Optional[str] = None
-    recurrence_end_date: Optional[date] = None
-    goal_id: Optional[int] = None
-    parent_id: Optional[int] = None
+    dueDate: str
+    dueTime: str
+    priority: str
+    reminders: List[str]
 
 class Task(TaskBase):
     id: int

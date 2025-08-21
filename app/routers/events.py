@@ -9,8 +9,7 @@ from datetime import date
 
 router = APIRouter(
     prefix="/events",
-    tags=["events"],
-    dependencies=[Depends(get_current_user)]
+    tags=["events"]
 )
 
 @router.post("/", response_model=schemas.Event, status_code=status.HTTP_201_CREATED)

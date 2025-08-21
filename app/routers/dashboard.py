@@ -8,8 +8,7 @@ from ..security import get_current_user
 
 router = APIRouter(
     prefix="/dashboard",
-    tags=["dashboard"],
-    dependencies=[Depends(get_current_user)]
+    tags=["dashboard"]
 )
 
 @router.get("/summary", response_model=dashboard_schema.DashboardSummaryResponse)

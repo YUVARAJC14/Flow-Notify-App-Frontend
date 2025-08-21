@@ -50,17 +50,33 @@ def create_user(db: Session, user: schemas_all.UserCreate):
     return db_user
 
 def create_user_task(db: Session, task: schemas_all.TaskCreate, user_id: int):
+    # Convert string dates and times to Python objects
+    due_date_obj = datetime.strptime(task.dueDate, '%Y-%m-%d').date()
+    due_time_obj = datetime.strptime(task.dueTime, '%H:%M').time()
+
+    # Convert priority string to PriorityEnum
+    priority_enum = models.PriorityEnum[task.priority.lower()]
+
+    # Handle reminders (e.g., join them into a single string or take the first one)
+    # The current database model only supports one reminder, so we'll take the first if it exists.
+    reminder_enum = None
+    if task.reminders:
+        try:
+            # Assuming reminders are like "10m", "1h", "1d"
+            reminder_map = {"10m": "ten_minutes", "1h": "one_hour", "1d": "one_day"}
+            reminder_key = reminder_map.get(task.reminders[0])
+            if reminder_key:
+                reminder_enum = models.ReminderEnum[reminder_key]
+        except (ValueError, KeyError):
+            reminder_enum = None # Or handle error appropriately
+
     db_task = models.Task(
         title=task.title,
         description=task.description,
-        due_date=task.due_date if task.due_date else date.today(),
-        due_time=task.due_time if task.due_time else datetime.now().time(),
-        priority=task.priority,
-        reminder=task.reminder,
-        completed=task.completed,
-        recurrence_rule=task.recurrence_rule,
-        goal_id=task.goal_id,
-        parent_id=task.parent_id,
+        due_date=due_date_obj,
+        due_time=due_time_obj,
+        priority=priority_enum,
+        reminder=reminder_enum,
         owner_id=user_id
     )
     db.add(db_task)
@@ -204,17 +220,16 @@ def get_tasks_due_in_days(db: Session, user_id: int, days: int):
     ).all()
 
 def create_user_event(db: Session, event: schemas_all.EventCreate, user_id: int):
-    start_datetime = datetime.combine(event.date, event.startTime)
-    end_datetime = datetime.combine(event.date, event.endTime)
-
     db_event = models.Event(
         title=event.title,
         location=event.location,
-        start_datetime=start_datetime,
-        end_datetime=end_datetime,
+        start_datetime=event.start_datetime,
+        end_datetime=event.end_datetime,
         category=event.category,
         notes=event.notes,
-        reminder_minutes_before=event.reminder,
+        reminder_minutes_before=event.reminder_minutes_before,
+        recurrence_rule=event.recurrence_rule,
+        recurrence_end_date=event.recurrence_end_date,
         owner_id=user_id
     )
     db.add(db_event)

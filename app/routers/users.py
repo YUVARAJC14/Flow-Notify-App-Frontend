@@ -8,8 +8,7 @@ from ..auth_utils import get_password_hash, verify_password
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
-    dependencies=[Depends(get_current_user)]
+    tags=["users"]
 )
 
 @router.get("/me", response_model=schemas_all.User)

@@ -7,8 +7,8 @@ from ..database.database import get_db
 from ..security import get_current_user
 
 router = APIRouter(
-    tags=["insights"],
-    dependencies=[Depends(get_current_user)]
+    prefix="/insights",
+    tags=["insights"]
 )
 
 @router.get("/insights", response_model=schemas_insights.Insights)
