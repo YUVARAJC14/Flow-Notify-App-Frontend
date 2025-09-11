@@ -273,7 +273,10 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
-        // In a real app, this would clear authentication tokens, etc.
+        // Clear authentication tokens and user data
+        val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+        sharedPreferences.edit().clear().commit()
+
         // Navigate to login screen
         val intent = Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
