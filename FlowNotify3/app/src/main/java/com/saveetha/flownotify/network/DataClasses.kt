@@ -19,8 +19,10 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
-    val access_token: String,
-    val token_type: String,
+    @SerializedName("accessToken")
+    val accessToken: String,
+    @SerializedName("refreshToken")
+    val refreshToken: String,
     val user: User
 )
 

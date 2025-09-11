@@ -10,7 +10,7 @@ from .database.database import get_db
 from .models.models import User, TokenBlocklist
 from .auth_utils import verify_password
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=15)):
     to_encode = data.copy()

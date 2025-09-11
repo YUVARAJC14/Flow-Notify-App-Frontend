@@ -17,8 +17,9 @@ class UserCreate(UserBase):
     password: str
 
 
-class User(UserBase):
+class UserResponse(UserBase):
     id: int
+    name: str
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -33,10 +34,16 @@ class Token(BaseModel):
     refresh_token: Optional[str] = None
 
 
+class UserLoginResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+
+
 class LoginResponse(BaseModel):
-    access_token: str
-    user: User
-    token_type: str
+    accessToken: str
+    refreshToken: str
+    user: UserLoginResponse
 
 
 class UserProfileUpdate(BaseModel):

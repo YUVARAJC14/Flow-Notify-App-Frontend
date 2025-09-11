@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from .. import crud
 from ..schemas import schemas
 from ..database.database import get_db
-from ..security import create_access_token, get_current_user
+from ..security import create_access_token, create_refresh_token, get_current_user
 from ..auth_utils import verify_password
 
 router = APIRouter(
@@ -33,38 +32,19 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
         )
     
     access_token = create_access_token(data={"sub": user.email})
+    refresh_token = create_refresh_token(data={"sub": user.email})
 
-    user_data = schemas.User(
+    user_data = schemas.UserLoginResponse(
         id=user.id,
+        name=user.full_name,
         email=user.email,
-        profile_picture_url=getattr(user, 'profile_picture_url', None),
-        theme=getattr(user, 'theme', 'light'),
-        language=getattr(user, 'language', 'en'),
-        email_notifications_enabled=getattr(user, 'email_notifications_enabled', True),
-        push_notifications_enabled=getattr(user, 'push_notifications_enabled', True)
     )
 
     return schemas.LoginResponse(
-        access_token=access_token,
-        token_type="bearer",
+        accessToken=access_token,
+        refreshToken=refresh_token,
         user=user_data
     )
-
-
-@router.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = crud.get_user_by_email(db, email=form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    access_token = create_access_token(data={"sub": user.email})
-
-    return {"access_token": access_token, "token_type": "bearer"}
-
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 def forgot_password(data: schemas.ForgotPasswordSchema, db: Session = Depends(get_db)):
@@ -92,6 +72,6 @@ def reset_password(data: schemas.ResetPasswordSchema, db: Session = Depends(get_
     return {"message": "Password has been reset successfully."}
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-def logout(current_user: schemas.User = Depends(get_current_user)):
+def logout(current_user: schemas.UserResponse = Depends(get_current_user)):
     # In a real app, this would invalidate the user's session or tokens.
     return {"message": "Logged out successfully."}

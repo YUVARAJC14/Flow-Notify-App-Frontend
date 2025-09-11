@@ -328,3 +328,9 @@ def get_events_by_date(db: Session, user_id: int, event_date: date):
         models.Event.start_datetime >= start_datetime,
         models.Event.start_datetime <= end_datetime
     ).order_by(models.Event.start_datetime).all()
+
+def update_user_name(db: Session, user: models.User, name: str):
+    user.full_name = name
+    db.commit()
+    db.refresh(user)
+    return user

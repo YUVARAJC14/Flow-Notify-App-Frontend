@@ -11,11 +11,11 @@ router = APIRouter(
     tags=["users"]
 )
 
-@router.get("/me", response_model=schemas_all.User)
+@router.get("/me", response_model=schemas_all.UserResponse)
 def get_user_profile(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-@router.put("/me", response_model=schemas_all.User)
+@router.put("/me", response_model=schemas_all.UserResponse)
 def update_user_profile(
     profile_update: schemas_all.UserProfileUpdate,
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def change_password(
     return
 
 
-@router.patch("/me/profile", response_model=schemas_all.User)
+@router.patch("/me/profile", response_model=schemas_all.UserResponse)
 def update_user_name(
     name_update: schemas_all.UserNameUpdate,
     db: Session = Depends(get_db),
@@ -45,7 +45,7 @@ def update_user_name(
 ):
     return crud.update_user_name(db, current_user, name_update.name)
 
-@router.patch("/me/settings", response_model=schemas_all.User)
+@router.patch("/me/settings", response_model=schemas_all.UserResponse)
 def update_user_settings(
     settings_update: schemas_all.AppSettingsUpdate,
     db: Session = Depends(get_db),

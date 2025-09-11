@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.saveetha.flownotify.network.ApiClient
 import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.LoginRequest
 import com.saveetha.flownotify.network.LoginResponse
@@ -26,11 +27,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var forgotPasswordText: TextView
 
     private val apiService: ApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ApiService::class.java)
+        ApiClient.getInstance(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,7 +98,7 @@ class LoginActivity : AppCompatActivity() {
                     loginResponse?.user?.name?.let { name ->
                         sharedPreferences.edit().putString("user_name", name).apply()
                     }
-                    loginResponse?.access_token?.let { token ->
+                    loginResponse?.accessToken?.let { token ->
                         sharedPreferences.edit().putString("access_token", token).apply()
                     }
                     // TODO: Save the access tokens securely

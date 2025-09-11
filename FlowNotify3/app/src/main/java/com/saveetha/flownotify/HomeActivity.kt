@@ -18,6 +18,7 @@ import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.AuthInterceptor
 import com.saveetha.flownotify.network.ScheduleEvent
 import com.saveetha.flownotify.network.UpcomingTask
+import com.saveetha.flownotify.network.ApiClient
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -41,16 +42,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var upcomingTaskAdapter: UpcomingTaskAdapter
 
     private val apiService: ApiService by lazy {
-        val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(this))
-            .build()
-
-        Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ApiService::class.java)
+        ApiClient.getInstance(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
