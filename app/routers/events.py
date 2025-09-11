@@ -5,7 +5,8 @@ from ..schemas import schemas
 from ..database.database import get_db
 from ..security import get_current_user
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
+from pydantic import ValidationError
 
 router = APIRouter(
     prefix="/events",
@@ -14,11 +15,31 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.Event, status_code=status.HTTP_201_CREATED)
 def create_event(
-    event: schemas.EventCreate,
+    event_request: schemas.EventCreateRequest,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    return crud.create_user_event(db=db, event=event, user_id=current_user.id)
+    try:
+        start_datetime_str = f"{event_request.date}T{event_request.startTime}"
+        end_datetime_str = f"{event_request.date}T{event_request.endTime}"
+        start_datetime = datetime.fromisoformat(start_datetime_str)
+        end_datetime = datetime.fromisoformat(end_datetime_str)
+
+        event_data = schemas.EventCreate(
+            title=event_request.title,
+            location=event_request.location,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            category=event_request.category,
+            notes=event_request.notes,
+            reminder_minutes_before=event_request.reminder
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid event data: {e}")
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return crud.create_user_event(db=db, event=event_data, user_id=current_user.id)
 
 @router.get("/", response_model=List[schemas.Event])
 def read_events(

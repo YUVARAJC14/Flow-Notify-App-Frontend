@@ -18,6 +18,7 @@ class CategoryEnum(str, enum.Enum):
     work = "Work"
     personal = "Personal"
     social = "Social"
+    health = "Health"
     other = "Other"
 
 class PasswordResetToken(Base):

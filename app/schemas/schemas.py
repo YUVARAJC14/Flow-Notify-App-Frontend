@@ -96,6 +96,7 @@ class CategoryEnum(str, Enum):
     work = "Work"
     personal = "Personal"
     social = "Social"
+    health = "Health"
     other = "Other"
 
 class TaskBase(BaseModel):
@@ -161,8 +162,21 @@ class EventBase(BaseModel):
     recurrence_rule: Optional[str] = None
     recurrence_end_date: Optional[date] = None
 
+
+class EventCreateRequest(BaseModel):
+    title: str
+    location: Optional[str] = None
+    date: str
+    startTime: str
+    endTime: str
+    category: str
+    notes: Optional[str] = None
+    reminder: Optional[int] = None
+
+
 class EventCreate(EventBase):
     pass
+
 
 class Event(EventBase):
     id: int
