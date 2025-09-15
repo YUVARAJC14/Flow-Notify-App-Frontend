@@ -104,7 +104,7 @@ class LoginActivity : AppCompatActivity() {
                     // TODO: Save the access tokens securely
                     Toast.makeText(this@LoginActivity, "Login successful! Welcome ${loginResponse?.user?.name}", Toast.LENGTH_LONG).show()
                     // Navigate to the main activity
-                    val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+                    val intent = Intent(this@LoginActivity, NameInputActivity::class.java)
                     startActivity(intent)
                     finish()
                 } else {
