@@ -2,21 +2,20 @@ package com.saveetha.flownotify
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.saveetha.flownotify.HomeActivity
-import com.google.android.material.bottomnavigation.BottomNavigationItemView
-import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.chip.Chip
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.saveetha.flownotify.network.ApiClient
+import com.saveetha.flownotify.network.ApiService
+import com.saveetha.flownotify.network.Task
+import kotlinx.coroutines.launch
 
 class MyTasksActivity : AppCompatActivity() {
 
@@ -27,6 +26,11 @@ class MyTasksActivity : AppCompatActivity() {
     private lateinit var chipToday: Chip
     private lateinit var chipUpcoming: Chip
     private lateinit var chipCompleted: Chip
+    private lateinit var taskAdapter: TaskAdapter
+
+    private val apiService: ApiService by lazy {
+        ApiClient.getInstance(this)
+    }
 
     // Current filter state
     private var currentFilter = "all"
@@ -46,6 +50,8 @@ class MyTasksActivity : AppCompatActivity() {
     private fun initViews() {
         recyclerView = findViewById(R.id.rv_tasks)
         recyclerView.layoutManager = LinearLayoutManager(this)
+        taskAdapter = TaskAdapter(emptyList())
+        recyclerView.adapter = taskAdapter
 
         emptyStateLayout = findViewById(R.id.layout_empty_state)
         searchEditText = findViewById(R.id.et_search)
@@ -120,51 +126,41 @@ class MyTasksActivity : AppCompatActivity() {
     }
 
     private fun fetchTasks(filter: String, searchQuery: String? = null) {
-        // Show loading state if needed
         showLoading(true)
 
-        // This is where you'd make your API call using Retrofit
-        // For example:
-        /*
-        val apiService = RetrofitClient.instance.create(ApiService::class.java)
-        val call = apiService.getTasks(filter, searchQuery)
-
-        call.enqueue(object : Callback<TaskResponse> {
-            override fun onResponse(call: Call<TaskResponse>, response: Response<TaskResponse>) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.getTasks(filter, searchQuery)
                 showLoading(false)
 
                 if (response.isSuccessful) {
-                    val tasks = response.body()
-                    if (tasks?.today.isNullOrEmpty() &&
-                        tasks?.tomorrow.isNullOrEmpty() &&
-                        tasks?.nextWeek.isNullOrEmpty()) {
-                        // Show empty state
+                    val tasksMap = response.body()
+                    val tasks = tasksMap?.values?.flatten() ?: emptyList()
+
+                    if (tasks.isEmpty()) {
                         showEmptyState(true)
                     } else {
-                        // Update RecyclerView with tasks
                         showEmptyState(false)
-                        // recyclerView.adapter = TaskAdapter(tasks)
+                        taskAdapter.updateTasks(tasks)
                     }
                 } else {
-                    // Handle error
                     showError("Failed to load tasks")
+                    showEmptyState(true)
                 }
-            }
-
-            override fun onFailure(call: Call<TaskResponse>, t: Throwable) {
+            } catch (e: Exception) {
                 showLoading(false)
-                showError("Network error: ${t.message}")
+                showError("Network error: ${e.message}")
+                showEmptyState(true)
             }
-        })
-        */
-
-        // For this template, we'll just simulate the API call
-        showLoading(false)
-        showEmptyState(true) // Show empty state initially
+        }
     }
 
     private fun showLoading(isLoading: Boolean) {
-        // Implement loading state (e.g., show/hide a ProgressBar)
+        // For now, just controlling the empty state visibility
+        if (isLoading) {
+            recyclerView.visibility = View.GONE
+            emptyStateLayout.visibility = View.GONE
+        }
     }
 
     private fun showEmptyState(isEmpty: Boolean) {
@@ -178,7 +174,7 @@ class MyTasksActivity : AppCompatActivity() {
     }
 
     private fun showError(message: String) {
-        // Show error message (e.g., using a Snackbar)
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     override fun onResume() {

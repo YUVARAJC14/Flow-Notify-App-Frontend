@@ -91,3 +91,21 @@ data class ScheduleEvent(
     val time: String,
     val location: String
 )
+
+data class Event(
+    val id: String,
+    val title: String,
+    val date: String,
+    val startTime: String,
+    val endTime: String,
+    val location: String?,
+    val category: String
+)
+
+data class Task(
+    val id: String,
+    val title: String,
+    val time: String,
+    val priority: String,
+    val isCompleted: Boolean
+)

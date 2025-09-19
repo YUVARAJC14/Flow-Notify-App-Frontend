@@ -1,21 +1,28 @@
 package com.saveetha.flownotify
 
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.saveetha.flownotify.network.ApiClient
+import com.saveetha.flownotify.network.ApiService
+import com.saveetha.flownotify.network.Event
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 class CalendarActivity : AppCompatActivity() {
@@ -30,6 +37,11 @@ class CalendarActivity : AppCompatActivity() {
     private lateinit var scheduleContainer: LinearLayout
     private lateinit var noEventsTextView: TextView
 
+    private val apiService: ApiService by lazy {
+        ApiClient.getInstance(this)
+    }
+    private var monthlyEvents: List<Event> = emptyList()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calendar)
@@ -38,7 +50,6 @@ class CalendarActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupListeners()
         generateCalendar()
-        updateEventsForSelectedDate()
     }
 
     private fun initViews() {
@@ -52,13 +63,11 @@ class CalendarActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        // Add Event FAB
         findViewById<FloatingActionButton>(R.id.fab_add_event).setOnClickListener {
             val intent = Intent(this, NewEventActivity::class.java)
             startActivity(intent)
         }
 
-        // Month Navigation
         btnPrevMonth.setOnClickListener {
             currentMonth.add(Calendar.MONTH, -1)
             generateCalendar()
@@ -86,7 +95,7 @@ class CalendarActivity : AppCompatActivity() {
                     overridePendingTransition(0, 0)
                     true
                 }
-                R.id.nav_calendar -> true // Already on Calendar
+                R.id.nav_calendar -> true
                 R.id.nav_insights -> {
                     startActivity(Intent(this, InsightsActivity::class.java))
                     overridePendingTransition(0, 0)
@@ -103,58 +112,78 @@ class CalendarActivity : AppCompatActivity() {
     }
 
     private fun generateCalendar() {
-        // Update month/year display
         val dateFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
         monthYearTextView.text = dateFormat.format(currentMonth.time)
 
-        // Clear previous calendar days
-        calendarGrid.removeAllViews()
+        fetchEventsForMonth { 
+            calendarGrid.removeAllViews()
+            val calendar = currentMonth.clone() as Calendar
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
 
-        // Clone the current month calendar to work with
-        val calendar = (currentMonth.clone() as Calendar)
+            var dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 2
+            if (dayOfWeek < 0) dayOfWeek = 6
 
-        // Set to first day of month
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
+            for (i in 0 until dayOfWeek) {
+                addDayToCalendar("", false, false, false)
+            }
 
-        // Determine day of week for the 1st of the month (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-        // Adjust to match our grid which starts with Monday as first day
-        var dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 2
-        if (dayOfWeek < 0) dayOfWeek = 6 // Convert Sunday from -1 to 6
+            val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+            val today = Calendar.getInstance()
+            val isCurrentMonth = today.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
+                    today.get(Calendar.MONTH) == calendar.get(Calendar.MONTH)
+            val todayDayOfMonth = today.get(Calendar.DAY_OF_MONTH)
+            val monthFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+            val currentMonthStr = monthFormat.format(calendar.time)
 
-        // Add empty spaces before the 1st day
-        for (i in 0 until dayOfWeek) {
-            addDayToCalendar("", false, false)
-        }
+            for (i in 1..daysInMonth) {
+                val isToday = isCurrentMonth && i == todayDayOfMonth
+                val isSelected = selectedDate.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
+                        selectedDate.get(Calendar.MONTH) == calendar.get(Calendar.MONTH) &&
+                        selectedDate.get(Calendar.DAY_OF_MONTH) == i
 
-        // Get the number of days in the month
-        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+                val dateStr = "$currentMonthStr-${String.format("%02d", i)}"
+                val hasEvent = monthlyEvents.any { it.date == dateStr }
 
-        // Get today's date components for highlighting
-        val today = Calendar.getInstance()
-        val isCurrentMonth = (today.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
-                today.get(Calendar.MONTH) == calendar.get(Calendar.MONTH))
-        val todayDayOfMonth = today.get(Calendar.DAY_OF_MONTH)
+                addDayToCalendar(i.toString(), isToday, isSelected, hasEvent)
+            }
 
-        // Add the days of the month
-        for (i in 1..daysInMonth) {
-            val isToday = isCurrentMonth && i == todayDayOfMonth
-            val isSelected = (selectedDate.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
-                    selectedDate.get(Calendar.MONTH) == calendar.get(Calendar.MONTH) &&
-                    selectedDate.get(Calendar.DAY_OF_MONTH) == i)
-
-            addDayToCalendar(i.toString(), isToday, isSelected)
-        }
-
-        // Fill the remaining cells to complete the grid
-        val filledCells = dayOfWeek + daysInMonth
-        val remainingCells = 42 - filledCells // 6 rows * 7 columns = 42 cells
-
-        for (i in 0 until remainingCells) {
-            addDayToCalendar("", false, false)
+            val filledCells = dayOfWeek + daysInMonth
+            val remainingCells = 42 - filledCells
+            for (i in 0 until remainingCells) {
+                addDayToCalendar("", false, false, false)
+            }
+            updateEventsForSelectedDate()
         }
     }
 
-    private fun addDayToCalendar(dayText: String, isToday: Boolean, isSelected: Boolean) {
+    private fun fetchEventsForMonth(onComplete: () -> Unit) {
+        val monthCalendar = currentMonth.clone() as Calendar
+        monthCalendar.set(Calendar.DAY_OF_MONTH, 1)
+        val firstDay = monthCalendar.time
+        monthCalendar.set(Calendar.DAY_OF_MONTH, monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        val lastDay = monthCalendar.time
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val startDate = sdf.format(firstDay)
+        val endDate = sdf.format(lastDay)
+
+        lifecycleScope.launch {
+            try {
+                val response = apiService.getEvents(startDate, endDate)
+                if (response.isSuccessful) {
+                    monthlyEvents = response.body() ?: emptyList()
+                } else {
+                    Toast.makeText(this@CalendarActivity, "Failed to load events for the month.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@CalendarActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                onComplete()
+            }
+        }
+    }
+
+    private fun addDayToCalendar(dayText: String, isToday: Boolean, isSelected: Boolean, hasEvent: Boolean) {
         val context = this
         val dayView = TextView(context).apply {
             text = dayText
@@ -162,34 +191,27 @@ class CalendarActivity : AppCompatActivity() {
             setPadding(8, 20, 8, 20)
             textSize = 14f
 
-            if (dayText.isEmpty()) {
-                // Empty day cell
-                setBackgroundResource(0)
-            } else {
-                // Regular day
-                if (isToday) {
-                    // Today's date
-                    setBackgroundResource(R.drawable.bg_calendar_day_today)
-                    setTextColor(ContextCompat.getColor(context, R.color.white))
-                } else if (isSelected) {
-                    // Selected date
+            if (dayText.isNotEmpty()) {
+                if (isSelected) {
                     setBackgroundResource(R.drawable.bg_calendar_day_selected)
                     setTextColor(ContextCompat.getColor(context, R.color.white))
+                } else if (isToday) {
+                    setBackgroundResource(R.drawable.bg_calendar_day_today)
+                    setTextColor(ContextCompat.getColor(context, R.color.white))
                 } else {
-                    // Normal day
                     setTextColor(ContextCompat.getColor(context, R.color.black))
                 }
 
-                // Make days clickable
-                setOnClickListener {
-                    // Update selected date and refresh calendar
-                    val day = dayText.toInt()
-                    selectedDate = (currentMonth.clone() as Calendar)
-                    selectedDate.set(Calendar.DAY_OF_MONTH, day)
-                    generateCalendar()
+                if (hasEvent && !isSelected) {
+                    setTypeface(typeface, Typeface.BOLD)
+                }
 
-                    // Update events for the selected day
-                    updateEventsForSelectedDate()
+                setOnClickListener {
+                    val day = dayText.toInt()
+                    selectedDate = (currentMonth.clone() as Calendar).apply {
+                        set(Calendar.DAY_OF_MONTH, day)
+                    }
+                    generateCalendar()
                 }
             }
         }
@@ -205,11 +227,10 @@ class CalendarActivity : AppCompatActivity() {
         calendarGrid.addView(dayView, params)
     }
 
-    // In a real app, this method would fetch events for the selected date from backend
     private fun updateEventsForSelectedDate() {
-        // API call to get events for the selected date
-        // For now, we'll simulate an empty list.
-        val events = emptyList<Any>() // Replace with your Event class
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val selectedDateStr = sdf.format(selectedDate.time)
+        val events = monthlyEvents.filter { it.date == selectedDateStr }
 
         if (events.isEmpty()) {
             scheduleScrollView.visibility = View.GONE
@@ -218,13 +239,25 @@ class CalendarActivity : AppCompatActivity() {
             scheduleScrollView.visibility = View.VISIBLE
             noEventsTextView.visibility = View.GONE
             scheduleContainer.removeAllViews()
-            // In a real app, you would loop through events and add them to scheduleContainer
-            // For example:
-            // for (event in events) {
-            //     val eventView = layoutInflater.inflate(R.layout.item_event, scheduleContainer, false)
-            //     // ... bind event data to eventView ...
-            //     scheduleContainer.addView(eventView)
-            // }
+            val inflater = LayoutInflater.from(this)
+            for (event in events) {
+                val eventView = inflater.inflate(R.layout.item_event, scheduleContainer, false)
+                val titleTextView = eventView.findViewById<TextView>(R.id.event_title)
+                val timeTextView = eventView.findViewById<TextView>(R.id.event_time)
+                val locationTextView = eventView.findViewById<TextView>(R.id.event_location)
+
+                titleTextView.text = event.title
+                timeTextView.text = "${event.startTime} - ${event.endTime}"
+                locationTextView.text = event.location
+                locationTextView.visibility = if (event.location.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+                scheduleContainer.addView(eventView)
+            }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        generateCalendar()
     }
 }
