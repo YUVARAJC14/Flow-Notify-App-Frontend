@@ -7,7 +7,7 @@ from ..database.database import get_db
 from ..security import get_current_user
 
 router = APIRouter(
-    prefix="/v1/tasks",
+    prefix="/tasks",
     tags=["tasks"]
 )
 

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +17,8 @@ import com.saveetha.flownotify.network.ApiClient
 import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.Task
 import kotlinx.coroutines.launch
+import android.widget.Button
+import android.widget.TextView
 
 class MyTasksActivity : AppCompatActivity() {
 
@@ -32,7 +35,6 @@ class MyTasksActivity : AppCompatActivity() {
         ApiClient.getInstance(this)
     }
 
-    // Current filter state
     private var currentFilter = "all"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,15 +44,15 @@ class MyTasksActivity : AppCompatActivity() {
         initViews()
         setupListeners()
         setupBottomNavigation()
-
-        // Initial data load with default filter
         fetchTasks(currentFilter)
     }
 
     private fun initViews() {
         recyclerView = findViewById(R.id.rv_tasks)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        taskAdapter = TaskAdapter(emptyList())
+        taskAdapter = TaskAdapter(emptyList()) { task ->
+            showTaskDetailsDialog(task)
+        }
         recyclerView.adapter = taskAdapter
 
         emptyStateLayout = findViewById(R.id.layout_empty_state)
@@ -63,20 +65,15 @@ class MyTasksActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        // FAB click listener
         findViewById<FloatingActionButton>(R.id.fab_add_task).setOnClickListener {
-            // Navigate to New Task activity
-            val intent = Intent(this, NewTaskActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, NewTaskActivity::class.java))
         }
 
-        // Search listener
         searchEditText.setOnEditorActionListener { _, _, _ ->
             performSearch(searchEditText.text.toString())
             true
         }
 
-        // Filter chip listeners
         chipAll.setOnClickListener { updateFilter("all") }
         chipToday.setOnClickListener { updateFilter("today") }
         chipUpcoming.setOnClickListener { updateFilter("upcoming") }
@@ -94,7 +91,7 @@ class MyTasksActivity : AppCompatActivity() {
                     overridePendingTransition(0, 0)
                     true
                 }
-                R.id.nav_tasks -> true // Already on Tasks
+                R.id.nav_tasks -> true
                 R.id.nav_calendar -> {
                     startActivity(Intent(this, CalendarActivity::class.java))
                     overridePendingTransition(0, 0)
@@ -121,7 +118,6 @@ class MyTasksActivity : AppCompatActivity() {
     }
 
     private fun performSearch(query: String) {
-        // Call API with search parameter
         fetchTasks(currentFilter, query)
     }
 
@@ -135,13 +131,32 @@ class MyTasksActivity : AppCompatActivity() {
 
                 if (response.isSuccessful) {
                     val tasksMap = response.body()
-                    val tasks = tasksMap?.values?.flatten() ?: emptyList()
+                    val displayList = mutableListOf<Any>()
 
-                    if (tasks.isEmpty()) {
+                    tasksMap?.get("today")?.let {
+                        if (it.isNotEmpty()) {
+                            displayList.add("Today")
+                            displayList.addAll(it)
+                        }
+                    }
+                    tasksMap?.get("tomorrow")?.let {
+                        if (it.isNotEmpty()) {
+                            displayList.add("Tomorrow")
+                            displayList.addAll(it)
+                        }
+                    }
+                    tasksMap?.get("nextWeek")?.let {
+                        if (it.isNotEmpty()) {
+                            displayList.add("Next Week")
+                            displayList.addAll(it)
+                        }
+                    }
+
+                    if (displayList.isEmpty()) {
                         showEmptyState(true)
                     } else {
                         showEmptyState(false)
-                        taskAdapter.updateTasks(tasks)
+                        taskAdapter.updateData(displayList)
                     }
                 } else {
                     showError("Failed to load tasks")
@@ -156,7 +171,6 @@ class MyTasksActivity : AppCompatActivity() {
     }
 
     private fun showLoading(isLoading: Boolean) {
-        // For now, just controlling the empty state visibility
         if (isLoading) {
             recyclerView.visibility = View.GONE
             emptyStateLayout.visibility = View.GONE
@@ -177,9 +191,34 @@ class MyTasksActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    private fun showTaskDetailsDialog(task: Task) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val title = dialogView.findViewById<TextView>(R.id.tv_task_details_title)
+        val description = dialogView.findViewById<TextView>(R.id.tv_task_details_description)
+        val dueDate = dialogView.findViewById<TextView>(R.id.tv_task_details_due_date)
+        val dueTime = dialogView.findViewById<TextView>(R.id.tv_task_details_due_time)
+        val priority = dialogView.findViewById<TextView>(R.id.tv_task_details_priority)
+        val closeButton = dialogView.findViewById<Button>(R.id.btn_close_details)
+
+        title.text = task.title
+        description.text = "No description available"
+        dueDate.text = ""
+        dueTime.text = task.time
+        priority.text = task.priority.replaceFirstChar { it.uppercase() } + " Priority"
+
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
     override fun onResume() {
         super.onResume()
-        // Refresh tasks when returning to this screen
         fetchTasks(currentFilter)
     }
 }

@@ -99,8 +99,8 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="All"
-                android:textColor="@color/black"
-                app:chipBackgroundColor="@color/blue" />
+                app:chipBackgroundColor="@color/chip_background_state"
+                android:textColor="@color/chip_text_color_state" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_today"
@@ -108,8 +108,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Today"
-                android:textColor="@color/black"
-                app:chipBackgroundColor="@color/light_gray" />
+                app:chipBackgroundColor="@color/chip_background_state"
+                android:textColor="@color/chip_text_color_state" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_upcoming"
@@ -117,8 +117,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Upcoming"
-                android:textColor="@color/black"
-                app:chipBackgroundColor="@color/light_gray" />
+                app:chipBackgroundColor="@color/chip_background_state"
+                android:textColor="@color/chip_text_color_state" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_completed"
@@ -126,8 +126,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Complete"
-                android:textColor="@color/black"
-                app:chipBackgroundColor="@color/light_gray" />
+                app:chipBackgroundColor="@color/chip_background_state"
+                android:textColor="@color/chip_text_color_state" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 

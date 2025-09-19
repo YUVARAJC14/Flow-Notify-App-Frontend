@@ -9,7 +9,12 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.saveetha.flownotify.network.Task
 
-class TaskAdapter(private var tasks: List<Task>) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) -> Unit) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    companion object {
+        private const val VIEW_TYPE_HEADER = 0
+        private const val VIEW_TYPE_TASK = 1
+    }
 
     class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.task_title)
@@ -18,43 +23,55 @@ class TaskAdapter(private var tasks: List<Task>) : RecyclerView.Adapter<TaskAdap
         val checkBox: CheckBox = itemView.findViewById(R.id.task_checkbox)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)
-        return TaskViewHolder(view)
+    class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val headerTitle: TextView = itemView.findViewById(R.id.tv_header_title)
     }
 
-    override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
-        val task = tasks[position]
-        holder.title.text = task.title
-        holder.time.text = task.time
-        holder.checkBox.isChecked = task.isCompleted
-
-        // Set priority dot color
-        val colorRes = when (task.priority) {
-            "high" -> R.color.priority_high
-            "medium" -> R.color.priority_medium
-            "low" -> R.color.priority_low
-            else -> R.color.gray // Default color
-        }
-        holder.priorityDot.background.setTint(ContextCompat.getColor(holder.itemView.context, colorRes))
-
-        // Handle checkbox state change (for future updates)
-        holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-            // In a real app, you would update the task's completion status in the backend
-            // For now, we'll just update the local object
-            // This is a simplified update. In a real app, you'd want to avoid creating new lists on every check.
-            val updatedTask = task.copy(isCompleted = isChecked)
-            val mutableTasks = tasks.toMutableList()
-            mutableTasks[position] = updatedTask
-            tasks = mutableTasks
-            // You might want to notify a listener or ViewModel here to persist the change
+    override fun getItemViewType(position: Int): Int {
+        return when (items[position]) {
+            is String -> VIEW_TYPE_HEADER
+            is Task -> VIEW_TYPE_TASK
+            else -> throw IllegalArgumentException("Invalid type of data at position $position")
         }
     }
 
-    override fun getItemCount(): Int = tasks.size
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == VIEW_TYPE_HEADER) {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task_header, parent, false)
+            HeaderViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)
+            TaskViewHolder(view)
+        }
+    }
 
-    fun updateTasks(newTasks: List<Task>) {
-        this.tasks = newTasks
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is HeaderViewHolder) {
+            holder.headerTitle.text = items[position] as String
+        } else if (holder is TaskViewHolder) {
+            val task = items[position] as Task
+            holder.title.text = task.title
+            holder.time.text = task.time
+            holder.checkBox.isChecked = task.isCompleted
+
+            val colorRes = when (task.priority) {
+                "high" -> R.color.priority_high
+                "medium" -> R.color.priority_medium
+                "low" -> R.color.priority_low
+                else -> R.color.gray
+            }
+            holder.priorityDot.background.setTint(ContextCompat.getColor(holder.itemView.context, colorRes))
+
+            holder.itemView.setOnClickListener {
+                onTaskClick(task)
+            }
+        }
+    }
+
+    override fun getItemCount(): Int = items.size
+
+    fun updateData(newItems: List<Any>) {
+        this.items = newItems
         notifyDataSetChanged()
     }
 }

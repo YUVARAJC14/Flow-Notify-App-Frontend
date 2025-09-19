@@ -13,7 +13,7 @@ router = APIRouter(
     tags=["events"]
 )
 
-@router.post("/", response_model=schemas.Event, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=schemas.Event, status_code=status.HTTP_201_CREATED)
 def create_event(
     event_request: schemas.EventCreateRequest,
     db: Session = Depends(get_db),
@@ -41,10 +41,10 @@ def create_event(
 
     return crud.create_user_event(db=db, event=event_data, user_id=current_user.id)
 
-@router.get("/", response_model=List[schemas.Event])
+@router.get("", response_model=List[schemas.Event])
 def read_events(
-    start_date: Optional[date] = Query(None, alias="start_date"),
-    end_date: Optional[date] = Query(None, alias="end_date"),
+    start_date: Optional[date] = Query(None, alias="startDate"),
+    end_date: Optional[date] = Query(None, alias="endDate"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):

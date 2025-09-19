@@ -90,7 +90,7 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
     if parent_id is not None:
         query = query.filter(models.Task.parent_id == parent_id)
     else:
-        query = query.filter(models.Task.parent_id == None) # Only fetch top-level tasks by default
+        query = query.filter(models.Task.parent_id == None)
 
     if search:
         query = query.filter(models.Task.title.contains(search) | models.Task.description.contains(search))
@@ -108,11 +108,14 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
     
     today = date.today()
     tomorrow = today + timedelta(days=1)
-    
+    next_week_start = today + timedelta(days=2)
+    next_week_end = today + timedelta(days=7)
+
     today_tasks = [task for task in tasks if task.due_date == today]
     tomorrow_tasks = [task for task in tasks if task.due_date == tomorrow]
+    next_week_tasks = [task for task in tasks if next_week_start <= task.due_date <= next_week_end]
 
-    return {"today": today_tasks, "tomorrow": tomorrow_tasks}
+    return {"today": today_tasks, "tomorrow": tomorrow_tasks, "nextWeek": next_week_tasks}
 
 def get_task_by_id(db: Session, task_id: int, user_id: int):
     return db.query(models.Task).filter(and_(models.Task.id == task_id, models.Task.owner_id == user_id)).first()
@@ -237,11 +240,13 @@ def create_user_event(db: Session, event: schemas_all.EventCreate, user_id: int)
     db.refresh(db_event)
     return db_event
 
-def get_events(db: Session, user_id: int, start_datetime: datetime = None, end_datetime: datetime = None, category: schemas_all.CategoryEnum = None):
+def get_events(db: Session, user_id: int, start_date: date = None, end_date: date = None, category: schemas_all.CategoryEnum = None):
     query = db.query(models.Event).filter(models.Event.owner_id == user_id)
-    if start_datetime:
+    if start_date:
+        start_datetime = datetime.combine(start_date, datetime.min.time())
         query = query.filter(models.Event.start_datetime >= start_datetime)
-    if end_datetime:
+    if end_date:
+        end_datetime = datetime.combine(end_date, datetime.max.time())
         query = query.filter(models.Event.end_datetime <= end_datetime)
     if category:
         query = query.filter(models.Event.category == category)
