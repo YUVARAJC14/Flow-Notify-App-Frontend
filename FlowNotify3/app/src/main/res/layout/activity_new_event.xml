@@ -67,7 +67,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/edittext_background"
-                android:hint="    Event title"
+                android:hint="        Event title"
                 android:inputType="text"
                 android:minHeight="48dp"
                 android:paddingVertical="8dp"
