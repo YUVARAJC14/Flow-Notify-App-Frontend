@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["tasks"]
 )
 
-@router.post("/", response_model=schemas.Task, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=schemas.Task, status_code=status.HTTP_201_CREATED)
 def create_task(
     task: schemas.TaskCreate,
     db: Session = Depends(get_db),
@@ -19,7 +19,7 @@ def create_task(
 ):
     return crud.create_user_task(db=db, task=task, user_id=current_user.id)
 
-@router.get("/", response_model=schemas.TaskListGrouped)
+@router.get("", response_model=schemas.TaskListGrouped)
 def read_tasks(
     filter: Optional[str] = None,
     search: Optional[str] = None,

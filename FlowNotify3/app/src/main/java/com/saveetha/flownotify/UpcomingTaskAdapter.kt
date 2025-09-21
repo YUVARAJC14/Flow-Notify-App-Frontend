@@ -8,7 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.saveetha.flownotify.network.UpcomingTask
 
-class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>) : RecyclerView.Adapter<UpcomingTaskAdapter.TaskViewHolder>() {
+class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>, private val onTaskClick: (UpcomingTask) -> Unit) : RecyclerView.Adapter<UpcomingTaskAdapter.TaskViewHolder>() {
 
     class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.task_title)
@@ -34,6 +34,7 @@ class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>) : RecyclerView.
             else -> R.color.gray // Default color
         }
         holder.priorityDot.background.setTint(ContextCompat.getColor(holder.itemView.context, colorRes))
+        holder.itemView.setOnClickListener { onTaskClick(task) }
     }
 
     override fun getItemCount(): Int = tasks.size

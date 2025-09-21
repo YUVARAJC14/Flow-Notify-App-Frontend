@@ -108,14 +108,12 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
     
     today = date.today()
     tomorrow = today + timedelta(days=1)
-    next_week_start = today + timedelta(days=2)
-    next_week_end = today + timedelta(days=7)
 
     today_tasks = [task for task in tasks if task.due_date == today]
     tomorrow_tasks = [task for task in tasks if task.due_date == tomorrow]
-    next_week_tasks = [task for task in tasks if next_week_start <= task.due_date <= next_week_end]
+    upcoming_tasks = [task for task in tasks if task.due_date > tomorrow]
 
-    return {"today": today_tasks, "tomorrow": tomorrow_tasks, "nextWeek": next_week_tasks}
+    return {"today": today_tasks, "tomorrow": tomorrow_tasks, "upcoming": upcoming_tasks}
 
 def get_task_by_id(db: Session, task_id: int, user_id: int):
     return db.query(models.Task).filter(and_(models.Task.id == task_id, models.Task.owner_id == user_id)).first()

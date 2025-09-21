@@ -82,7 +82,9 @@ data class UpcomingTask(
     val id: String,
     val title: String,
     val time: String,
-    val priority: String
+    val priority: String,
+    val dueDate: String,
+    val description: String?
 )
 
 data class ScheduleEvent(
@@ -105,6 +107,8 @@ data class Event(
 data class Task(
     val id: String,
     val title: String,
+    val description: String?,
+    val dueDate: String,
     val time: String,
     val priority: String,
     val isCompleted: Boolean

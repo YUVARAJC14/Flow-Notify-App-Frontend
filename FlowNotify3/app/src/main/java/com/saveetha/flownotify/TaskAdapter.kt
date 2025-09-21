@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.saveetha.flownotify.network.Task
+import com.saveetha.flownotify.network.TaskResponse
 
 class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) -> Unit) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -54,7 +55,7 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
             holder.time.text = task.time
             holder.checkBox.isChecked = task.isCompleted
 
-            val colorRes = when (task.priority) {
+            val colorRes = when (task.priority.lowercase()) {
                 "high" -> R.color.priority_high
                 "medium" -> R.color.priority_medium
                 "low" -> R.color.priority_low
@@ -62,8 +63,13 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
             }
             holder.priorityDot.background.setTint(ContextCompat.getColor(holder.itemView.context, colorRes))
 
-            holder.itemView.setOnClickListener {
-                onTaskClick(task)
+            holder.itemView.setOnClickListener { onTaskClick(task) }
+
+            holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
+                val updatedTask = task.copy(isCompleted = isChecked)
+                val mutableItems = items.toMutableList()
+                mutableItems[position] = updatedTask
+                items = mutableItems
             }
         }
     }

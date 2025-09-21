@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="12dp"
-            android:button="@drawable/checkbox_selector" />
+            android:button="@drawable/task_checkbox_selector" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -46,12 +46,10 @@
                 tools:text="10:00 AM" />
         </LinearLayout>
 
-        <View
-            android:id="@+id/task_priority_dot"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/priority_dot_shape" />
-
-    </LinearLayout>
+                        <View
+                            android:id="@+id/task_priority_dot"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/priority_dot_shape" />    </LinearLayout>
 </androidx.cardview.widget.CardView>

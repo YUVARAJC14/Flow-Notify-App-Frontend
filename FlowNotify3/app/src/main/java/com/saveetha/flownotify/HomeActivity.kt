@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -69,7 +70,9 @@ class HomeActivity : AppCompatActivity() {
         addEventButton = findViewById(R.id.btn_add_event)
 
         // Setup RecyclerView for upcoming tasks
-        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList())
+        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList()) { task ->
+            showTaskDetailsDialog(task)
+        }
         upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
         upcomingTasksRecyclerView.adapter = upcomingTaskAdapter
     }
@@ -203,6 +206,32 @@ class HomeActivity : AppCompatActivity() {
         emptyUpcomingTasks.visibility = View.VISIBLE
         scheduleContainer.visibility = View.GONE
         emptySchedule.visibility = View.VISIBLE
+    }
+
+    private fun showTaskDetailsDialog(task: UpcomingTask) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val title = dialogView.findViewById<TextView>(R.id.tv_task_details_title)
+        val description = dialogView.findViewById<TextView>(R.id.tv_task_details_description)
+        val dueDate = dialogView.findViewById<TextView>(R.id.tv_task_details_due_date)
+        val dueTime = dialogView.findViewById<TextView>(R.id.tv_task_details_due_time)
+        val priority = dialogView.findViewById<TextView>(R.id.tv_task_details_priority)
+        val closeButton = dialogView.findViewById<Button>(R.id.btn_close_details)
+
+        title.text = task.title
+        description.text = task.description ?: "No description available."
+        dueDate.text = task.dueDate
+        dueTime.text = task.time
+        priority.text = task.priority.replaceFirstChar { it.uppercase() } + " Priority"
+
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     override fun onResume() {

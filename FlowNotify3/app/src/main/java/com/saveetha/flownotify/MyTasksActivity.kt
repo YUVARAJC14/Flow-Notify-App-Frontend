@@ -19,6 +19,7 @@ import com.saveetha.flownotify.network.Task
 import kotlinx.coroutines.launch
 import android.widget.Button
 import android.widget.TextView
+import com.saveetha.flownotify.network.TaskResponse
 
 class MyTasksActivity : AppCompatActivity() {
 
@@ -205,10 +206,10 @@ class MyTasksActivity : AppCompatActivity() {
         val closeButton = dialogView.findViewById<Button>(R.id.btn_close_details)
 
         title.text = task.title
-        description.text = "No description available"
-        dueDate.text = ""
+        description.text = task.description ?: "No description available."
+        dueDate.text = task.dueDate
         dueTime.text = task.time
-        priority.text = task.priority.replaceFirstChar { it.uppercase() } + " Priority"
+        priority.text = task.priority.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() } + " Priority"
 
         closeButton.setOnClickListener {
             dialog.dismiss()
