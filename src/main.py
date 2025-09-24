@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.responses import JSONResponse
 from .database.database import init_db
+from .auth import router as auth_router
 from .users import router as users_router
 from .tasks import router as tasks_router
 from .dashboard import router as dashboard_router
