@@ -2,12 +2,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.responses import JSONResponse
 from .database.database import init_db
-from .auth import router as auth_router
-from .users import router as users_router
-from .tasks import router as tasks_router
-from .dashboard import router as dashboard_router
-from .events import router as events_router
-from .insights import router as insights_router
+from src.auth.router import router as auth_router
+from src.users.router import router as users_router
+from src.tasks.router import router as tasks_router
+from src.dashboard.router import router as dashboard_router
+from src.events.router import router as events_router
+from src.insights.router import router as insights_router
 
 from .security import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
