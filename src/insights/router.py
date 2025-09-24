@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.auth import models as auth_models
-from ..schemas import insights as schemas_insights
+from . import schemas as schemas_insights
 from ..services import insights_service
 from ..database.database import get_db
 from ..security import get_current_user
