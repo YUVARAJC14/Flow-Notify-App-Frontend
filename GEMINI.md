@@ -1,15 +1,244 @@
-Of course. Based on the provided screens for the "Flow Notify" app, here is a detailed breakdown of the necessary API routes. These routes follow RESTful principles and are designed to support the functionality shown.
+Flow Notify" app, here is a detailed breakdown of the necessary API routes. These routes follow RESTful principles and are designed to support the functionality shown.
+Flow Notify is a FastAPI sqlite sqlalchemy project. 
 
-### General Conventions
 
-*   **Base URL:** All routes will be prefixed with `/api`. For example: `https://yourdomain.com/api/...`
-*   **Authentication:** All protected routes will require a JSON Web Token (JWT) to be sent in the `Authorization` header.
-    `Authorization: Bearer <your_jwt_token>`
-*   **Request/Response Format:** All data will be sent and received as JSON.
-*   **Success Response:** Successful `GET`, `PUT`, `PATCH`, `POST` requests will typically return a `200 OK` or `201 Created` status with a JSON body. Successful `DELETE` requests will return a `204 No Content` status with no body.
-*   **Error Response:** Errors (e.g., validation, not found, server error) will return an appropriate `4xx` or `5xx` status code with a JSON body explaining the error, like: `{ "error": "Invalid credentials" }`.
+## Project Structure
+There are many ways to structure a project, but the best structure is one that is consistent, straightforward, and free of surprises.
 
----
+Many example projects and tutorials divide the project by file type (e.g., crud, routers, models), which works well for microservices or projects with fewer scopes. However, this approach didn't fit our monolith with many domains and modules.
+
+The structure I found more scalable and evolvable for these cases is inspired by Netflix's [Dispatch](https://github.com/Netflix/dispatch), with some minor modifications.
+```
+fastapi-project
+├── alembic/
+├── src
+│   ├── auth
+│   │   ├── router.py
+│   │   ├── schemas.py  # pydantic models
+│   │   ├── models.py  # db models
+│   │   ├── dependencies.py
+│   │   ├── config.py  # local configs
+│   │   ├── constants.py
+│   │   ├── exceptions.py
+│   │   ├── service.py
+│   │   └── utils.py
+│   ├── aws
+│   │   ├── client.py  # client model for external service communication
+│   │   ├── schemas.py
+│   │   ├── config.py
+│   │   ├── constants.py
+│   │   ├── exceptions.py
+│   │   └── utils.py
+│   └── posts
+│   │   ├── router.py
+│   │   ├── schemas.py
+│   │   ├── models.py
+│   │   ├── dependencies.py
+│   │   ├── constants.py
+│   │   ├── exceptions.py
+│   │   ├── service.py
+│   │   └── utils.py
+│   ├── config.py  # global configs
+│   ├── models.py  # global models
+│   ├── exceptions.py  # global exceptions
+│   ├── pagination.py  # global module e.g. pagination
+│   ├── database.py  # db connection related stuff
+│   └── main.py
+├── tests/
+│   ├── auth
+│   ├── aws
+│   └── posts
+├── templates/
+│   └── index.html
+├── requirements
+│   ├── base.txt
+│   ├── dev.txt
+│   └── prod.txt
+├── .env
+├── .gitignore
+├── logging.ini
+└── alembic.ini
+```
+1. Store all domain directories inside `src` folder
+   1. `src/` - highest level of an app, contains common models, configs, and constants, etc.
+   2. `src/main.py` - root of the project, which inits the FastAPI app
+2. Each package has its own router, schemas, models, etc.
+   1. `router.py` - is a core of each module with all the endpoints
+   2. `schemas.py` - for pydantic models
+   3. `models.py` - for db models
+   4. `service.py` - module specific business logic  
+   5. `dependencies.py` - router dependencies
+   6. `constants.py` - module specific constants and error codes
+   7. `config.py` - e.g. env vars
+   8. `utils.py` - non-business logic functions, e.g. response normalization, data enrichment, etc.
+   9. `exceptions.py` - module specific exceptions, e.g. `PostNotFound`, `InvalidUserData`
+3. When package requires services or dependencies or constants from other packages - import them with an explicit module name
+```python
+from src.auth import constants as auth_constants
+from src.notifications import service as notification_service
+from src.posts.constants import ErrorCode as PostsErrorCode  # in case we have Standard ErrorCode in constants module of each package
+```
+## Pydantic
+### Excessively use Pydantic
+Pydantic has a rich set of features to validate and transform data. 
+
+In addition to regular features like required & non-required fields with default values, 
+Pydantic has built-in comprehensive data processing tools like regex, enums, strings manipulation, emails validation, etc.
+```python
+from enum import Enum
+from pydantic import AnyUrl, BaseModel, EmailStr, Field
+
+
+class MusicBand(str, Enum):
+   AEROSMITH = "AEROSMITH"
+   QUEEN = "QUEEN"
+   ACDC = "AC/DC"
+
+
+class UserBase(BaseModel):
+    first_name: str = Field(min_length=1, max_length=128)
+    username: str = Field(min_length=1, max_length=128, pattern="^[A-Za-z0-9-_]+$")
+    email: EmailStr
+    age: int = Field(ge=18, default=None)  # must be greater or equal to 18
+    favorite_band: MusicBand | None = None  # only "AEROSMITH", "QUEEN", "AC/DC" values are allowed to be inputted
+    website: AnyUrl | None = None
+```
+### Custom Base Model
+Having a controllable global base model allows us to customize all the models within the app. For instance, we can enforce a standard datetime format or introduce a common method for all subclasses of the base model.
+```python
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, ConfigDict
+
+
+def datetime_to_gmt_str(dt: datetime) -> str:
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+
+    return dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+
+class CustomModel(BaseModel):
+    model_config = ConfigDict(
+        json_encoders={datetime: datetime_to_gmt_str},
+        populate_by_name=True,
+    )
+
+    def serializable_dict(self, **kwargs):
+        """Return a dict which contains only serializable fields."""
+        default_dict = self.model_dump()
+
+        return jsonable_encoder(default_dict)
+
+
+```
+In the example above, we have decided to create a global base model that:
+- Serializes all datetime fields to a standard format with an explicit timezone
+- Provides a method to return a dict with only serializable fields
+### Decouple Pydantic BaseSettings
+BaseSettings was a great innovation for reading environment variables, but having a single BaseSettings for the whole app can become messy over time. To improve maintainability and organization, we have split the BaseSettings across different modules and domains.
+```python
+# src.auth.config
+from datetime import timedelta
+
+from pydantic_settings import BaseSettings
+
+
+class AuthConfig(BaseSettings):
+    JWT_ALG: str
+    JWT_SECRET: str
+    JWT_EXP: int = 5  # minutes
+
+    REFRESH_TOKEN_KEY: str
+    REFRESH_TOKEN_EXP: timedelta = timedelta(days=30)
+
+    SECURE_COOKIES: bool = True
+
+
+auth_settings = AuthConfig()
+
+
+# src.config
+from pydantic import PostgresDsn, RedisDsn, model_validator
+from pydantic_settings import BaseSettings
+
+from src.constants import Environment
+
+
+class Config(BaseSettings):
+    DATABASE_URL: PostgresDsn
+    REDIS_URL: RedisDsn
+
+    SITE_DOMAIN: str = "myapp.com"
+
+    ENVIRONMENT: Environment = Environment.PRODUCTION
+
+    SENTRY_DSN: str | None = None
+
+    CORS_ORIGINS: list[str]
+    CORS_ORIGINS_REGEX: str | None = None
+    CORS_HEADERS: list[str]
+
+    APP_VERSION: str = "1.0"
+
+
+settings = Config()
+
+```
+### Docs
+```
+2. Help FastAPI to generate an easy-to-understand docs
+   1. Set `response_model`, `status_code`, `description`, etc.
+   2. If models and statuses vary, use `responses` route attribute to add docs for different responses
+```python
+from fastapi import APIRouter, status
+
+router = APIRouter()
+
+@router.post(
+    "/endpoints",
+    response_model=DefaultResponseModel,  # default response pydantic model 
+    status_code=status.HTTP_201_CREATED,  # default status code
+    description="Description of the well documented endpoint",
+    tags=["Endpoint Category"],
+    summary="Summary of the Endpoint",
+    responses={
+        status.HTTP_200_OK: {
+            "model": OkResponse, # custom pydantic model for 200 response
+            "description": "Ok Response",
+        },
+        status.HTTP_201_CREATED: {
+            "model": CreatedResponse,  # custom pydantic model for 201 response
+            "description": "Creates something from user request",
+        },
+        status.HTTP_202_ACCEPTED: {
+            "model": AcceptedResponse,  # custom pydantic model for 202 response
+            "description": "Accepts request and handles it later",
+        },
+    },
+)
+async def documented_route():
+    pass
+```
+Will generate docs like this:
+![FastAPI Generated Custom Response Docs](images/custom_responses.png "Custom Response Docs")
+
+### Set DB keys naming conventions
+Explicitly setting the indexes' namings according to your database's convention is preferable over sqlalchemy's. 
+```python
+from sqlalchemy import MetaData
+
+POSTGRES_INDEXES_NAMING_CONVENTION = {
+    "ix": "%(column_0_label)s_idx",
+    "uq": "%(table_name)s_%(column_0_name)s_key",
+    "ck": "%(table_name)s_%(constraint_name)s_check",
+    "fk": "%(table_name)s_%(column_0_name)s_fkey",
+    "pk": "%(table_name)s_pkey",
+}
+metadata = MetaData(naming_convention=POSTGRES_INDEXES_NAMING_CONVENTION)
+```
 
 ### 1. Authentication & Onboarding (Screens 1-5)
 
@@ -38,10 +267,10 @@ These routes handle user registration, login, password reset, and initial setup.
 
 #### `POST /api/auth/login` (for Screen 1: Sign In)
 *   **Description:** Authenticates a user and returns access tokens.
-*   **Request Body:**
+*   **Request Body(FORM DATA):**
     ```json
     {
-      "email": "john.smith@example.com",
+      "username": "john.smith@example.com",
       "password": "Password123!"
     }
     ```

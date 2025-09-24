@@ -3,7 +3,6 @@ package com.saveetha.flownotify
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -15,15 +14,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.saveetha.flownotify.network.ApiClient
 import com.saveetha.flownotify.network.ApiService
-import com.saveetha.flownotify.network.AuthInterceptor
 import com.saveetha.flownotify.network.ScheduleEvent
 import com.saveetha.flownotify.network.UpcomingTask
-import com.saveetha.flownotify.network.ApiClient
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -34,13 +29,14 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var dateTextView: TextView
     private lateinit var flowMessageTextView: TextView
     private lateinit var upcomingTasksRecyclerView: RecyclerView
+    private lateinit var scheduleRecyclerView: RecyclerView // Changed
     private lateinit var emptyUpcomingTasks: LinearLayout
-    private lateinit var scheduleContainer: LinearLayout
     private lateinit var emptySchedule: LinearLayout
     private lateinit var addTaskButton: Button
     private lateinit var addEventButton: Button
 
     private lateinit var upcomingTaskAdapter: UpcomingTaskAdapter
+    private lateinit var scheduleEventAdapter: ScheduleEventAdapter // Added
 
     private val apiService: ApiService by lazy {
         ApiClient.getInstance(this)
@@ -63,8 +59,8 @@ class HomeActivity : AppCompatActivity() {
         dateTextView = findViewById(R.id.tv_date)
         flowMessageTextView = findViewById(R.id.tv_flow_message)
         upcomingTasksRecyclerView = findViewById(R.id.upcoming_tasks_recyclerview)
+        scheduleRecyclerView = findViewById(R.id.schedule_recyclerview) // Changed
         emptyUpcomingTasks = findViewById(R.id.empty_upcoming_tasks)
-        scheduleContainer = findViewById(R.id.schedule_container)
         emptySchedule = findViewById(R.id.empty_schedule)
         addTaskButton = findViewById(R.id.btn_add_task)
         addEventButton = findViewById(R.id.btn_add_event)
@@ -75,10 +71,14 @@ class HomeActivity : AppCompatActivity() {
         }
         upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
         upcomingTasksRecyclerView.adapter = upcomingTaskAdapter
+
+        // Setup RecyclerView for today's schedule
+        scheduleEventAdapter = ScheduleEventAdapter(emptyList())
+        scheduleRecyclerView.layoutManager = LinearLayoutManager(this)
+        scheduleRecyclerView.adapter = scheduleEventAdapter
     }
 
     private fun setupCurrentDate() {
-        // Format and display current date
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
         val formattedDate = dateFormat.format(calendar.time)
@@ -145,13 +145,8 @@ class HomeActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val summary = response.body()
                     summary?.let {
-                        // Update Today's Flow
                         flowMessageTextView.text = "You have ${it.todaysFlow.percentage}% flow today!"
-
-                        // Update Upcoming Tasks
                         updateUpcomingTasks(it.upcomingTasks)
-
-                        // Update Today's Schedule
                         updateTodaysSchedule(it.todaysSchedule)
                     }
                 } else {
@@ -176,35 +171,20 @@ class HomeActivity : AppCompatActivity() {
 
     private fun updateTodaysSchedule(events: List<ScheduleEvent>) {
         if (events.isEmpty()) {
-            scheduleContainer.visibility = View.GONE
+            scheduleRecyclerView.visibility = View.GONE
             emptySchedule.visibility = View.VISIBLE
         } else {
-            scheduleContainer.visibility = View.VISIBLE
+            scheduleRecyclerView.visibility = View.VISIBLE
             emptySchedule.visibility = View.GONE
-            scheduleContainer.removeAllViews()
-
-            val inflater = LayoutInflater.from(this)
-            for (event in events) {
-                val eventView = inflater.inflate(R.layout.item_event, scheduleContainer, false)
-                val titleTextView = eventView.findViewById<TextView>(R.id.event_title)
-                val timeTextView = eventView.findViewById<TextView>(R.id.event_time)
-                val locationTextView = eventView.findViewById<TextView>(R.id.event_location)
-
-                titleTextView.text = event.title
-                timeTextView.text = event.time
-                locationTextView.text = event.location
-
-                scheduleContainer.addView(eventView)
-            }
+            scheduleEventAdapter.updateEvents(events)
         }
     }
 
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        // Show empty states as a fallback
         upcomingTasksRecyclerView.visibility = View.GONE
         emptyUpcomingTasks.visibility = View.VISIBLE
-        scheduleContainer.visibility = View.GONE
+        scheduleRecyclerView.visibility = View.GONE
         emptySchedule.visibility = View.VISIBLE
     }
 
@@ -236,7 +216,6 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh data when returning to this screen
         loadInitialData()
     }
 }

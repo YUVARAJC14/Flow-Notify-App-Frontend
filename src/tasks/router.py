@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from .. import crud, models
+from .. import crud
+from src.auth import models as auth_models
+from src.tasks import models as task_models
 from ..schemas import schemas
 from ..database.database import get_db
 from ..security import get_current_user
@@ -15,7 +17,7 @@ router = APIRouter(
 def create_task(
     task: schemas.TaskCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     return crud.create_user_task(db=db, task=task, user_id=current_user.id)
 
@@ -24,7 +26,7 @@ def read_tasks(
     filter: Optional[str] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     return crud.get_tasks(db=db, user_id=current_user.id, search=search, date_filter=filter)
 
@@ -34,7 +36,7 @@ def update_task(
     task_id: int,
     task_update: schemas.TaskPartialUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
     if not db_task:
@@ -45,7 +47,7 @@ def update_task(
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
     if not db_task:

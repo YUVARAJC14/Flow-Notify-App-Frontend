@@ -18,14 +18,12 @@ class UserCreate(UserBase):
 
 
 class UserResponse(UserBase):
-    id: int
+    id: str
     name: str
     model_config = ConfigDict(from_attributes=True)
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+
 
 
 class Token(BaseModel):
@@ -35,7 +33,7 @@ class Token(BaseModel):
 
 
 class UserLoginResponse(BaseModel):
-    id: int
+    id: str
     name: str
     email: EmailStr
 
@@ -122,7 +120,7 @@ class TaskCreate(BaseModel):
 
 class Task(TaskBase):
     id: int
-    owner_id: int
+    owner_id: str
     subtasks: List['Task'] = [] # For hierarchical tasks
     model_config = ConfigDict(from_attributes=True)
 
@@ -180,7 +178,7 @@ class EventCreate(EventBase):
 
 class Event(EventBase):
     id: int
-    owner_id: int
+    owner_id: str
     model_config = ConfigDict(from_attributes=True)
 
 class GoalStatusEnum(str, Enum):
@@ -201,7 +199,7 @@ class GoalCreate(GoalBase):
 
 class Goal(GoalBase):
     id: int
-    owner_id: int
+    owner_id: str
     model_config = ConfigDict(from_attributes=True)
 
 class NaturalLanguageTaskCreate(BaseModel):

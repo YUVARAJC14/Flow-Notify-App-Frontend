@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from .. import crud, models
+from .. import crud
+from src.auth import models as auth_models
+from src.events import models as event_models
 from ..schemas import schemas
 from ..database.database import get_db
 from ..security import get_current_user
@@ -17,7 +19,7 @@ router = APIRouter(
 def create_event(
     event_request: schemas.EventCreateRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     try:
         start_datetime_str = f"{event_request.date}T{event_request.startTime}"
@@ -30,7 +32,7 @@ def create_event(
             location=event_request.location,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
-            category=event_request.category,
+            category=schemas.CategoryEnum(event_request.category),
             notes=event_request.notes,
             reminder_minutes_before=event_request.reminder
         )
@@ -46,7 +48,7 @@ def read_events(
     start_date: Optional[date] = Query(None, alias="startDate"),
     end_date: Optional[date] = Query(None, alias="endDate"),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     return crud.get_events(db=db, user_id=current_user.id, start_date=start_date, end_date=end_date)
 
@@ -55,7 +57,7 @@ def update_event(
     event_id: int,
     event: schemas.EventCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     db_event = crud.get_event_by_id(db=db, event_id=event_id, user_id=current_user.id)
     if db_event is None:
@@ -66,7 +68,7 @@ def update_event(
 def delete_event(
     event_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: auth_models.User = Depends(get_current_user)
 ):
     db_event = crud.get_event_by_id(db=db, event_id=event_id, user_id=current_user.id)
     if db_event is None:

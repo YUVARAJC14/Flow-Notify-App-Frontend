@@ -1,6 +1,7 @@
 package com.saveetha.flownotify.network
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 data class RegisterRequest(
     val fullName: String,
@@ -91,7 +92,8 @@ data class ScheduleEvent(
     val id: String,
     val title: String,
     val time: String,
-    val location: String
+    val location: String,
+    val category: String
 )
 
 data class Event(
@@ -102,7 +104,7 @@ data class Event(
     val endTime: String,
     val location: String?,
     val category: String
-)
+) : Serializable
 
 data class Task(
     val id: String,

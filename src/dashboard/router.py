@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .. import crud
-from .. import models
+from src.auth import models as auth_models
 from ..schemas import dashboard as dashboard_schema
 from ..database.database import get_db
 from ..security import get_current_user
@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 @router.get("/summary", response_model=dashboard_schema.DashboardSummaryResponse)
-def get_dashboard_summary(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def get_dashboard_summary(db: Session = Depends(get_db), current_user: auth_models.User = Depends(get_current_user)):
     """
     Fetches all aggregated data needed for the main dashboard screen.
     """
@@ -38,7 +38,8 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: models.Us
             id=str(event.id),
             title=event.title,
             time=event.start_datetime.strftime("%I:%M %p"),
-            location=event.location or ""
+            location=event.location or "",
+            category=event.category.value if event.category else ""
         ) for event in todays_schedule_db
     ]
 

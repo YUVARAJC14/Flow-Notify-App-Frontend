@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from app.models.models import User
+from src.auth import models as auth_models
 
 class IntegrationService:
     def __init__(self):

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Notify API Tester</title>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 2em; background-color: #f4f7f9; color: #333; }
+        .container { max-width: 800px; margin: auto; }
+        h1, h2 { color: #1a73e8; }
+        .endpoint-section { background-color: #fff; border: 1px solid #dfe1e5; border-radius: 8px; padding: 1.5em; margin-bottom: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-container { display: grid; grid-template-columns: 1fr; gap: 1em; }
+        label { font-weight: 600; margin-bottom: 0.5em; }
+        input, select, textarea { width: 100%; padding: 0.8em; margin-bottom: 1em; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 0.8em 1.5em; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        button:hover { background-color: #185abc; }
+        .response-container { border: 1px solid #eee; padding: 1em; background-color: #f9f9f9; border-radius: 4px; margin-top: 1em; white-space: pre-wrap; word-wrap: break-word; }
+        .method { font-family: monospace; background-color: #e8f0fe; color: #1a73e8; padding: 0.2em 0.5em; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flow Notify API Tester</h1>
+        <p>A simple interface to test all API routes for the Flow Notify app.</p>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/register</h2>
+            <form id="register-form">
+                <label for="register-fullName">Full Name</label>
+                <input type="text" id="register-fullName" name="fullName" required>
+                <label for="register-email">Email</label>
+                <input type="email" id="register-email" name="email" required>
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" name="password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/login</h2>
+            <form id="login-form">
+                <label for="login-username">Username (Email)</label>
+                <input type="email" id="login-username" name="username" value="q@q.q" required>
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" name="password" value="q" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/forgot-password</h2>
+            <form id="forgot-password-form">
+                <label for="forgot-email">Email</label>
+                <input type="email" id="forgot-email" name="email" required>
+                <button type="submit">Send Reset Link</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/reset-password</h2>
+            <form id="reset-password-form">
+                <label for="reset-token">Reset Token</label>
+                <input type="text" id="reset-token" name="token" required>
+                <label for="reset-newPassword">New Password</label>
+                <input type="password" id="reset-newPassword" name="newPassword" required>
+                <button type="submit">Reset Password</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/resend-verification</h2>
+            <form id="resend-verification-form">
+                <label for="resend-email">Email</label>
+                <input type="email" id="resend-email" name="email" required>
+                <button type="submit">Resend Verification</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/verify-email</h2>
+            <form id="verify-email-form">
+                <label for="verify-token">Verification Token</label>
+                <input type="text" id="verify-token" name="token" required>
+                <button type="submit">Verify Email</button>
+            </form>
+        </div>
+        
+        <div class="endpoint-section">
+            <h2><span class="method">PATCH</span> /api/users/me/profile</h2>
+            <form id="update-user-name-form">
+                <label for="update-name">Name</label>
+                <input type="text" id="update-name" name="name" required>
+                <label for="auth-token-update-name">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-update-name" name="authToken" required>
+                <button type="submit">Update Name</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">PUT</span> /api/users/me</h2>
+            <form id="update-user-profile-form">
+                <label for="auth-token-update-profile">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-update-profile" name="authToken" required>
+                <label for="update-profile-username">Username</label>
+                <input type="text" id="update-profile-username" name="username">
+                <label for="update-profile-email">Email</label>
+                <input type="email" id="update-profile-email" name="email">
+                <label for="update-profile-picture">Profile Picture URL</label>
+                <input type="text" id="update-profile-picture" name="profile_picture_url">
+                <button type="submit">Update Profile</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">GET</span> /api/dashboard/summary</h2>
+            <form id="dashboard-summary-form">
+                <label for="auth-token-dashboard">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-dashboard" name="authToken" required>
+                <button type="submit">Get Summary</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">GET</span> /api/tasks</h2>
+            <form id="get-tasks-form">
+                <label for="auth-token-tasks">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-tasks" name="authToken" required>
+                <label for="tasks-filter">Filter</label>
+                <select id="tasks-filter" name="filter">
+                    <option value="all">All</option>
+                    <option value="today">Today</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <label for="tasks-search">Search</label>
+                <input type="text" id="tasks-search" name="search">
+                <button type="submit">Get Tasks</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/tasks</h2>
+            <form id="create-task-form">
+                <label for="auth-token-create-task">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-create-task" name="authToken" required>
+                <label for="task-title">Title</label>
+                <input type="text" id="task-title" name="title" required>
+                <label for="task-desc">Description</label>
+                <textarea id="task-desc" name="description"></textarea>
+                <label for="task-dueDate">Due Date</label>
+                <input type="date" id="task-dueDate" name="dueDate" required>
+                <label for="task-dueTime">Due Time</label>
+                <input type="time" id="task-dueTime" name="dueTime" required>
+                <label for="task-priority">Priority</label>
+                <select id="task-priority" name="priority">
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+                <label for="task-reminders">Reminders (comma-separated)</label>
+                <input type="text" id="task-reminders" name="reminders" value="10,60">
+                <button type="submit">Create Task</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">PATCH</span> /api/tasks/{taskId}</h2>
+            <form id="update-task-form">
+                <label for="auth-token-update-task">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-update-task" name="authToken" required>
+                <label for="update-task-id">Task ID</label>
+                <input type="text" id="update-task-id" name="taskId" required>
+                <label for="update-task-completed">Completed</label>
+                <input type="checkbox" id="update-task-completed" name="isCompleted">
+                <button type="submit">Update Task</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">DELETE</span> /api/tasks/{taskId}</h2>
+            <form id="delete-task-form">
+                <label for="auth-token-delete-task">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-delete-task" name="authToken" required>
+                <label for="delete-task-id">Task ID</label>
+                <input type="text" id="delete-task-id" name="taskId" required>
+                <button type="submit">Delete Task</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">GET</span> /api/events</h2>
+            <form id="get-events-form">
+                <label for="auth-token-events">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-events" name="authToken" required>
+                <label for="events-startDate">Start Date</label>
+                <input type="date" id="events-startDate" name="startDate" required>
+                <label for="events-endDate">End Date</label>
+                <input type="date" id="events-endDate" name="endDate" required>
+                <button type="submit">Get Events</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/events</h2>
+            <form id="create-event-form">
+                <label for="auth-token-create-event">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-create-event" name="authToken" required>
+                <label for="event-title">Title</label>
+                <input type="text" id="event-title" name="title" required>
+                <label for="event-location">Location</label>
+                <input type="text" id="event-location" name="location">
+                <label for="event-date">Date</label>
+                <input type="date" id="event-date" name="date" required>
+                <label for="event-startTime">Start Time</label>
+                <input type="time" id="event-startTime" name="startTime" required>
+                <label for="event-endTime">End Time</label>
+                <input type="time" id="event-endTime" name="endTime" required>
+                <label for="event-category">Category</label>
+                <input type="text" id="event-category" name="category" value="work">
+                <button type="submit">Create Event</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">PUT</span> /api/events/{eventId}</h2>
+            <form id="update-event-form">
+                <label for="auth-token-update-event">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-update-event" name="authToken" required>
+                <label for="update-event-id">Event ID</label>
+                <input type="text" id="update-event-id" name="eventId" required>
+                <label for="update-event-title">Title</label>
+                <input type="text" id="update-event-title" name="title" required>
+                <label for="update-event-location">Location</label>
+                <input type="text" id="update-event-location" name="location">
+                <label for="update-event-date">Date</label>
+                <input type="date" id="update-event-date" name="date" required>
+                <label for="update-event-startTime">Start Time</label>
+                <input type="time" id="update-event-startTime" name="startTime" required>
+                <label for="update-event-endTime">End Time</label>
+                <input type="time" id="update-event-endTime" name="endTime" required>
+                <label for="update-event-category">Category</label>
+                <input type="text" id="update-event-category" name="category" value="work">
+                <button type="submit">Update Event</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">DELETE</span> /api/events/{eventId}</h2>
+            <form id="delete-event-form">
+                <label for="auth-token-delete-event">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-delete-event" name="authToken" required>
+                <label for="delete-event-id">Event ID</label>
+                <input type="text" id="delete-event-id" name="eventId" required>
+                <button type="submit">Delete Event</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">GET</span> /api/insights/insights</h2>
+            <form id="get-insights-form">
+                <label for="auth-token-insights">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-insights" name="authToken" required>
+                <label for="insights-period">Period</label>
+                <select id="insights-period" name="period">
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                </select>
+                <button type="submit">Get Insights</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">GET</span> /api/users/me</h2>
+            <form id="get-user-profile-form">
+                <label for="auth-token-get-profile">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-get-profile" name="authToken" required>
+                <button type="submit">Get My Profile</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">PATCH</span> /api/users/me/settings</h2>
+            <form id="update-settings-form">
+                <label for="auth-token-settings">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-settings" name="authToken" required>
+                <label for="settings-theme">Theme</label>
+                <select id="settings-theme" name="theme">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+                <button type="submit">Update Settings</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/users/me/change-password</h2>
+            <form id="change-password-form">
+                <label for="auth-token-change-password">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-change-password" name="authToken" required>
+                <label for="current-password">Current Password</label>
+                <input type="password" id="current-password" name="currentPassword" required>
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" name="newPassword" required>
+                <button type="submit">Change Password</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2><span class="method">POST</span> /api/auth/logout</h2>
+            <form id="logout-form">
+                <label for="auth-token-logout">Auth Token (Bearer)</label>
+                <input type="text" id="auth-token-logout" name="authToken" required>
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+
+        <div class="endpoint-section">
+            <h2>Response</h2>
+            <div class="response-container">
+                <pre id="response"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const responseEl = document.getElementById('response');
+        const baseUrl = 'http://localhost:8000';
+        let bearerToken = '';
+
+        // Helper to display response
+        const displayResponse = (data) => {
+            responseEl.textContent = JSON.stringify(data, null, 2);
+        };
+        
+        // Helper to get auth token from input
+        const getAuthToken = (inputId) => {
+            const token = document.getElementById(inputId).value;
+            return token ? `Bearer ${token}` : '';
+        }
+
+        // Register
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await fetch(`${baseUrl}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const res = await fetch(`${baseUrl}/api/auth/login`, {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.accessToken) {
+                bearerToken = data.accessToken;
+                // Populate token fields
+                document.querySelectorAll('input[name="authToken"]').forEach(input => input.value = bearerToken);
+            }
+            displayResponse(data);
+        });
+
+        // Forgot Password
+        document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await fetch(`${baseUrl}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Reset Password
+        document.getElementById('reset-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Resend Verification
+        document.getElementById('resend-verification-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await fetch(`${baseUrl}/api/auth/resend-verification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Verify Email
+        document.getElementById('verify-email-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await fetch(`${baseUrl}/api/auth/verify-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Update User Name
+        document.getElementById('update-user-name-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = { name: formData.get('name') };
+            const res = await fetch(`${baseUrl}/api/users/me/profile`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-update-name')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Update User Profile
+        document.getElementById('update-user-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                profile_picture_url: formData.get('profile_picture_url'),
+            };
+            const res = await fetch(`${baseUrl}/api/users/me`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-update-profile')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Dashboard Summary
+        document.getElementById('dashboard-summary-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch(`${baseUrl}/api/dashboard/summary`, {
+                headers: { 'Authorization': getAuthToken('auth-token-dashboard') }
+            });
+            displayResponse(await res.json());
+        });
+
+        // Get Tasks
+        document.getElementById('get-tasks-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams({
+                filter: formData.get('filter'),
+                search: formData.get('search'),
+            });
+            const res = await fetch(`${baseUrl}/api/tasks?${params}`, {
+                headers: { 'Authorization': getAuthToken('auth-token-tasks') }
+            });
+            displayResponse(await res.json());
+        });
+
+        // Create Task
+        document.getElementById('create-task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                dueDate: formData.get('dueDate'),
+                dueTime: formData.get('dueTime'),
+                priority: formData.get('priority'),
+                reminders: formData.get('reminders').split(',').map(s => s.trim()),
+            };
+            const res = await fetch(`${baseUrl}/api/tasks`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-create-task')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Update Task
+        document.getElementById('update-task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const taskId = formData.get('taskId');
+            const data = {
+                isCompleted: formData.get('isCompleted') === 'on'
+            };
+            const res = await fetch(`${baseUrl}/api/tasks/${taskId}`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-update-task')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Delete Task
+        document.getElementById('delete-task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const taskId = formData.get('taskId');
+            const res = await fetch(`${baseUrl}/api/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': getAuthToken('auth-token-delete-task')
+                }
+            });
+            displayResponse(res.status === 204 ? { message: 'Task deleted successfully' } : await res.json());
+        });
+
+        // Get Events
+        document.getElementById('get-events-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams({
+                startDate: formData.get('startDate'),
+                endDate: formData.get('endDate'),
+            });
+            const res = await fetch(`${baseUrl}/api/events?${params}`, {
+                headers: { 'Authorization': getAuthToken('auth-token-events') }
+            });
+            displayResponse(await res.json());
+        });
+
+        // Create Event
+        document.getElementById('create-event-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await fetch(`${baseUrl}/api/events`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-create-event')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Update Event
+        document.getElementById('update-event-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const eventId = formData.get('eventId');
+            const data = {
+                title: formData.get('title'),
+                location: formData.get('location'),
+                date: formData.get('date'),
+                startTime: formData.get('startTime'),
+                endTime: formData.get('endTime'),
+                category: formData.get('category'),
+            };
+            const res = await fetch(`${baseUrl}/api/events/${eventId}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-update-event')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Delete Event
+        document.getElementById('delete-event-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const eventId = formData.get('eventId');
+            const res = await fetch(`${baseUrl}/api/events/${eventId}`, {
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': getAuthToken('auth-token-delete-event')
+                }
+            });
+            displayResponse(res.status === 204 ? { message: 'Event deleted successfully' } : await res.json());
+        });
+
+        // Get Insights
+        document.getElementById('get-insights-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams({ period: formData.get('period') });
+            const res = await fetch(`${baseUrl}/api/insights/insights?${params}`, {
+                headers: { 'Authorization': getAuthToken('auth-token-insights') }
+            });
+            displayResponse(await res.json());
+        });
+
+        // Get User Profile
+        document.getElementById('get-user-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch(`${baseUrl}/api/users/me`, {
+                headers: { 'Authorization': getAuthToken('auth-token-get-profile') }
+            });
+            displayResponse(await res.json());
+        });
+
+        // Update Settings
+        document.getElementById('update-settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = { theme: formData.get('theme') };
+            const res = await fetch(`${baseUrl}/api/users/me/settings`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-settings')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(await res.json());
+        });
+
+        // Change Password
+        document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                current_password: formData.get('currentPassword'),
+                new_password: formData.get('newPassword'),
+            };
+            const res = await fetch(`${baseUrl}/api/users/me/change-password`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': getAuthToken('auth-token-change-password')
+                },
+                body: JSON.stringify(data),
+            });
+            displayResponse(res.status === 204 ? { message: 'Password updated successfully.' } : await res.json());
+        });
+
+        // Logout
+        document.getElementById('logout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch(`${baseUrl}/api/auth/logout`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': getAuthToken('auth-token-logout')
+                }
+            });
+            displayResponse(await res.json());
+        });
+
+    </script>
+</body>
+</html>

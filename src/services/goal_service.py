@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from app.models.models import Goal, User, Task
-from app.schemas.schemas import GoalCreate, GoalStatusEnum
+from sqlalchemy.orm import Session
+from src.auth import models as auth_models
+from src.tasks import models as task_models
+from ..schemas.schemas import GoalCreate, GoalStatusEnum
 from typing import List, Optional
-from datetime import date
 
 class GoalService:
     def __init__(self):
@@ -14,23 +15,23 @@ class GoalService:
         print("Loading ML model for goal task suggestions...")
         return {"model_status": "ready"}
 
-    def create_goal(self, db: Session, goal: GoalCreate, user_id: int) -> Goal:
-        db_goal = Goal(**goal.model_dump(), owner_id=user_id)
+    def create_goal(self, db: Session, goal: GoalCreate, user_id: int) -> task_models.Goal:
+        db_goal = task_models.Goal(**goal.model_dump(), owner_id=user_id)
         db.add(db_goal)
         db.commit()
         db.refresh(db_goal)
         return db_goal
 
-    def get_goals(self, db: Session, user_id: int, status: Optional[GoalStatusEnum] = None) -> List[Goal]:
-        query = db.query(Goal).filter(Goal.owner_id == user_id)
+    def get_goals(self, db: Session, user_id: int, status: Optional[GoalStatusEnum] = None) -> List[task_models.Goal]:
+        query = db.query(task_models.Goal).filter(task_models.Goal.owner_id == user_id)
         if status:
-            query = query.filter(Goal.status == status)
+            query = query.filter(task_models.Goal.status == status)
         return query.all()
 
-    def get_goal_by_id(self, db: Session, goal_id: int, user_id: int) -> Optional[Goal]:
-        return db.query(Goal).filter(Goal.id == goal_id, Goal.owner_id == user_id).first()
+    def get_goal_by_id(self, db: Session, goal_id: int, user_id: int) -> Optional[task_models.Goal]:
+        return db.query(task_models.Goal).filter(task_models.Goal.id == goal_id, task_models.Goal.owner_id == user_id).first()
 
-    def update_goal(self, db: Session, db_goal: Goal, goal_update: GoalCreate) -> Goal:
+    def update_goal(self, db: Session, db_goal: task_models.Goal, goal_update: GoalCreate) -> task_models.Goal:
         goal_data = goal_update.model_dump(exclude_unset=True)
         for key, value in goal_data.items():
             setattr(db_goal, key, value)
@@ -39,7 +40,7 @@ class GoalService:
         db.refresh(db_goal)
         return db_goal
 
-    def delete_goal(self, db: Session, db_goal: Goal):
+    def delete_goal(self, db: Session, db_goal: task_models.Goal):
         db.delete(db_goal)
         db.commit()
 
@@ -72,7 +73,7 @@ class GoalService:
         if not goal:
             return
 
-        associated_tasks = db.query(Task).filter(Task.goal_id == goal.id, Task.owner_id == user_id).all()
+        associated_tasks = db.query(task_models.Task).filter(task_models.Task.goal_id == goal.id, task_models.Task.owner_id == user_id).all()
         if not associated_tasks:
             goal.progress = 0
             goal.status = GoalStatusEnum.not_started

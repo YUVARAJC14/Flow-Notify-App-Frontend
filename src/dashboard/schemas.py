@@ -15,6 +15,7 @@ class ScheduleEvent(BaseModel):
     title: str
     time: str
     location: str
+    category: str
 
 class DashboardSummaryResponse(BaseModel):
     todaysFlow: TodaysFlow

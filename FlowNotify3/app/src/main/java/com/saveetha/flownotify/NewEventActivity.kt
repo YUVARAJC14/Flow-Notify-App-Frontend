@@ -1,7 +1,9 @@
 package com.saveetha.flownotify
 
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -14,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.AuthInterceptor
 import com.saveetha.flownotify.network.CreateEventRequest
+import com.saveetha.flownotify.network.Event
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -52,7 +55,7 @@ class NewEventActivity : AppCompatActivity() {
             .build()
 
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
+            .baseUrl("http://localhost:8000/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -142,34 +145,30 @@ class NewEventActivity : AppCompatActivity() {
 
     private fun updateCategorySelection(category: String) {
         // Update visual selection
-        val selectedBackground = when (category) {
+        when (category) {
             "Work" -> {
                 categoryWork.alpha = 1.0f
                 categoryPersonal.alpha = 0.6f
                 categoryHealth.alpha = 0.6f
                 categorySocial.alpha = 0.6f
-                R.drawable.bg_category_work
             }
             "Personal" -> {
                 categoryWork.alpha = 0.6f
                 categoryPersonal.alpha = 1.0f
                 categoryHealth.alpha = 0.6f
                 categorySocial.alpha = 0.6f
-                R.drawable.bg_category_personal
             }
             "Health" -> {
                 categoryWork.alpha = 0.6f
                 categoryPersonal.alpha = 0.6f
                 categoryHealth.alpha = 1.0f
                 categorySocial.alpha = 0.6f
-                R.drawable.bg_category_health
             }
             else -> {
                 categoryWork.alpha = 0.6f
                 categoryPersonal.alpha = 0.6f
                 categoryHealth.alpha = 0.6f
                 categorySocial.alpha = 1.0f
-                R.drawable.bg_category_social
             }
         }
 
@@ -203,7 +202,6 @@ class NewEventActivity : AppCompatActivity() {
                     startTimeHour = hourOfDay
                     startTimeMinute = minute
 
-                    // Update end time if needed
                     if (endTimeHour < hourOfDay || (endTimeHour == hourOfDay && endTimeMinute < minute)) {
                         endTimeHour = if (hourOfDay < 23) hourOfDay + 1 else hourOfDay
                         endTimeMinute = minute
@@ -212,7 +210,6 @@ class NewEventActivity : AppCompatActivity() {
                     endTimeHour = hourOfDay
                     endTimeMinute = minute
 
-                    // Update start time if needed
                     if (startTimeHour > hourOfDay || (startTimeHour == hourOfDay && startTimeMinute > minute)) {
                         startTimeHour = hourOfDay
                         startTimeMinute = minute
@@ -231,7 +228,6 @@ class NewEventActivity : AppCompatActivity() {
         val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(calendar.time)
 
-        // Check if date is today
         val today = Calendar.getInstance()
         val isToday = (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                 calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR))
@@ -244,27 +240,23 @@ class NewEventActivity : AppCompatActivity() {
     }
 
     private fun updateTimeDisplay() {
-        // Format start time
         val startTimeCalendar = Calendar.getInstance()
         startTimeCalendar.set(Calendar.HOUR_OF_DAY, startTimeHour)
         startTimeCalendar.set(Calendar.MINUTE, startTimeMinute)
         val startTimeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
         val formattedStartTime = startTimeFormat.format(startTimeCalendar.time)
 
-        // Format end time
         val endTimeCalendar = Calendar.getInstance()
         endTimeCalendar.set(Calendar.HOUR_OF_DAY, endTimeHour)
         endTimeCalendar.set(Calendar.MINUTE, endTimeMinute)
         val endTimeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
         val formattedEndTime = endTimeFormat.format(endTimeCalendar.time)
 
-        // Update UI
         startTimeTextView.text = formattedStartTime
         endTimeTextView.text = formattedEndTime
     }
 
     private fun showReminderOptions() {
-        // Here you would show a dialog or dropdown with reminder options
         val reminderOptions = listOf(
             "No reminder",
             "5 minutes before",
@@ -274,8 +266,6 @@ class NewEventActivity : AppCompatActivity() {
             "2 hours before",
             "1 day before"
         )
-        // In a real app, you would show a dialog here.
-        // For simplicity, we'll just cycle through.
         val currentReminder = reminderTextView.text.toString()
         val currentIndex = reminderOptions.indexOf(currentReminder)
         val nextIndex = (currentIndex + 1) % reminderOptions.size
@@ -316,8 +306,16 @@ class NewEventActivity : AppCompatActivity() {
             try {
                 val response = apiService.createEvent(request)
                 if (response.isSuccessful) {
-                    Toast.makeText(this@NewEventActivity, "Event created successfully", Toast.LENGTH_SHORT).show()
-                    finish()
+                    val newEvent = response.body()
+                    if (newEvent != null) {
+                        Toast.makeText(this@NewEventActivity, "Event created successfully", Toast.LENGTH_SHORT).show()
+                        val resultIntent = Intent()
+                        resultIntent.putExtra("new_event", newEvent as java.io.Serializable)
+                        setResult(Activity.RESULT_OK, resultIntent)
+                        finish()
+                    } else {
+                        Toast.makeText(this@NewEventActivity, "Failed to get event data from response", Toast.LENGTH_LONG).show()
+                    }
                 } else {
                     Toast.makeText(this@NewEventActivity, "Failed to create event: ${response.errorBody()?.string()}", Toast.LENGTH_LONG).show()
                 }

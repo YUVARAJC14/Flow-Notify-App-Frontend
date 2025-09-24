@@ -2,8 +2,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.responses import JSONResponse
 from .database.database import init_db
-from .routers import users, tasks, dashboard, events, insights, auth
-from . import models
+from .users import router as users_router
+from .tasks import router as tasks_router
+from .dashboard import router as dashboard_router
+from .events import router as events_router
+from .insights import router as insights_router
+
 from .security import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,18 +36,18 @@ def create_app():
     )
 
     # Router for authentication endpoints (no security dependency)
-    auth_router = APIRouter(prefix="/api")
-    auth_router.include_router(auth.router)
+    auth_router_container = APIRouter(prefix="/api")
+    auth_router_container.include_router(auth_router)
 
     # Router for all other API endpoints (with security dependency)
     api_router = APIRouter(prefix="/api", dependencies=[Depends(get_current_user)])
-    api_router.include_router(users.router)
-    api_router.include_router(tasks.router)
-    api_router.include_router(dashboard.router)
-    api_router.include_router(events.router)
-    api_router.include_router(insights.router)
+    api_router.include_router(users_router)
+    api_router.include_router(tasks_router)
+    api_router.include_router(dashboard_router)
+    api_router.include_router(events_router)
+    api_router.include_router(insights_router)
 
-    app.include_router(auth_router)
+    app.include_router(auth_router_container)
     app.include_router(api_router)
 
     @app.get("/")

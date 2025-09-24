@@ -204,12 +204,16 @@
                         android:textStyle="bold" />
 
                     <!-- Schedule list container - Will be populated from backend -->
-                    <LinearLayout
-                        android:id="@+id/schedule_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="vertical" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/schedule_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:itemCount="2"
+            tools:listitem="@layout/item_home_event" />
 
                     <!-- Empty state for schedule -->
                     <LinearLayout
