@@ -2,8 +2,9 @@ from datetime import date, datetime, time, timedelta
 from typing import List, Optional, Tuple
 from dateutil.rrule import rrule, rrulestr, DAILY, WEEKLY, MONTHLY, YEARLY
 
-from app.models.models import Task, Event
-from app.schemas.schemas import TaskCreate, EventCreate
+from src.tasks import models as task_models
+from src.events import models as event_models
+from ..schemas.schemas import TaskCreate, EventCreate
 
 class RecurrenceService:
     def __init__(self):
@@ -21,7 +22,7 @@ class RecurrenceService:
             print(f"Error parsing recurrence rule {rrule_str}: {e}")
             return None
 
-    def generate_recurring_tasks(self, base_task: Task, start_date: date, end_date: date) -> List[Task]:
+    def generate_recurring_tasks(self, base_task: task_models.Task, start_date: date, end_date: date) -> List[task_models.Task]:
         """Generates future occurrences of a recurring task."""
         if not base_task.recurrence_rule:
             return []
@@ -39,7 +40,7 @@ class RecurrenceService:
 
         for dt in rule.between(dtstart, datetime.combine(effective_end_date, time.max)):
             if dt.date() > base_task.due_date: # Only generate future occurrences
-                new_task = Task(
+                new_task = task_models.Task(
                     title=base_task.title,
                     description=base_task.description,
                     due_date=dt.date(),
@@ -54,7 +55,7 @@ class RecurrenceService:
                 generated_tasks.append(new_task)
         return generated_tasks
 
-    def generate_recurring_events(self, base_event: Event, start_date: date, end_date: date) -> List[Event]:
+    def generate_recurring_events(self, base_event: event_models.Event, start_date: date, end_date: date) -> List[event_models.Event]:
         """Generates future occurrences of a recurring event."""
         if not base_event.recurrence_rule:
             return []
@@ -71,7 +72,7 @@ class RecurrenceService:
         for dt in rule.between(dtstart, datetime.combine(effective_end_date, time.max)):
             if dt.date() > base_event.start_datetime.date(): # Only generate future occurrences
                 time_diff = base_event.end_datetime - base_event.start_datetime
-                new_event = Event(
+                new_event = event_models.Event(
                     title=base_event.title,
                     location=base_event.location,
                     start_datetime=dt,
