@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .. import crud
 from src.auth import models as auth_models
-from ..schemas import dashboard as dashboard_schema
+from . import schemas as dashboard_schema
 from ..database.database import get_db
 from ..security import get_current_user
 
