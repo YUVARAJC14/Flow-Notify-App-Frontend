@@ -272,7 +272,7 @@ def get_events(db: Session, user_id: int, start_date: date = None, end_date: dat
 def get_event_by_id(db: Session, event_id: int, user_id: int):
     return db.query(event_models.Event).filter(and_(event_models.Event.id == event_id, event_models.Event.owner_id == user_id)).first()
 
-def update_event(db: Session, event: event_models.Event, event_update: schemas_all.EventCreate):
+def update_event(db: Session, event: event_models.Event, event_update: schemas_all.EventUpdate):
     event_data = event_update.model_dump(exclude_unset=True)
     for key, value in event_data.items():
         setattr(event, key, value)

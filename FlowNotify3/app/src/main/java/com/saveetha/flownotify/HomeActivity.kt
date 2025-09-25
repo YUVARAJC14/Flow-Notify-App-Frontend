@@ -5,7 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -27,9 +30,10 @@ class HomeActivity : AppCompatActivity() {
 
     private lateinit var greetingTextView: TextView
     private lateinit var dateTextView: TextView
-    private lateinit var flowMessageTextView: TextView
+    private lateinit var flowPercentageTextView: TextView
+    private lateinit var flowProgressBar: ProgressBar
     private lateinit var upcomingTasksRecyclerView: RecyclerView
-    private lateinit var scheduleRecyclerView: RecyclerView // Changed
+    private lateinit var scheduleRecyclerView: RecyclerView
     private lateinit var emptyUpcomingTasks: LinearLayout
     private lateinit var emptySchedule: LinearLayout
     private lateinit var addTaskButton: Button
@@ -57,7 +61,8 @@ class HomeActivity : AppCompatActivity() {
     private fun initViews() {
         greetingTextView = findViewById(R.id.tv_greeting)
         dateTextView = findViewById(R.id.tv_date)
-        flowMessageTextView = findViewById(R.id.tv_flow_message)
+        flowPercentageTextView = findViewById(R.id.tv_flow_percentage)
+        flowProgressBar = findViewById(R.id.progress_bar_flow)
         upcomingTasksRecyclerView = findViewById(R.id.upcoming_tasks_recyclerview)
         scheduleRecyclerView = findViewById(R.id.schedule_recyclerview) // Changed
         emptyUpcomingTasks = findViewById(R.id.empty_upcoming_tasks)
@@ -66,16 +71,94 @@ class HomeActivity : AppCompatActivity() {
         addEventButton = findViewById(R.id.btn_add_event)
 
         // Setup RecyclerView for upcoming tasks
-        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList()) { task ->
+        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList()) { task: UpcomingTask ->
             showTaskDetailsDialog(task)
         }
         upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
         upcomingTasksRecyclerView.adapter = upcomingTaskAdapter
 
         // Setup RecyclerView for today's schedule
-        scheduleEventAdapter = ScheduleEventAdapter(emptyList())
+        scheduleEventAdapter = ScheduleEventAdapter(emptyList()) { event ->
+            showEventDetailsDialog(event)
+        }
         scheduleRecyclerView.layoutManager = LinearLayoutManager(this)
         scheduleRecyclerView.adapter = scheduleEventAdapter
+    }
+
+    private fun showEventDetailsDialog(event: ScheduleEvent) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
+        val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)
+        val date = dialogView.findViewById<TextView>(R.id.tv_event_details_date)
+        val time = dialogView.findViewById<TextView>(R.id.tv_event_details_time)
+        val location = dialogView.findViewById<TextView>(R.id.tv_event_details_location)
+        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_event)
+        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_event)
+
+        title.text = event.title
+        notes.text = "No notes available for this event view."
+        date.text = event.time // Assuming time contains date info for this view
+        time.text = event.time
+        location.text = event.location ?: "No location specified."
+
+        completeButton.setOnClickListener {
+            markEventAsComplete(event.id)
+            dialog.dismiss()
+        }
+
+        deleteButton.setOnClickListener {
+            deleteEvent(event.id)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun markEventAsComplete(eventId: String) {
+        lifecycleScope.launch {
+            try {
+                val eventIdInt = eventId.toIntOrNull()
+                if (eventIdInt == null) {
+                    showError("Invalid event ID")
+                    return@launch
+                }
+                val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
+                val response = apiService.updateEvent(eventIdInt, request)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HomeActivity, "Event marked as complete", Toast.LENGTH_SHORT).show()
+                    loadDashboardSummary() // Refresh the data
+                } else {
+                    showError("Failed to update event: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun deleteEvent(eventId: String) {
+        lifecycleScope.launch {
+            try {
+                val eventIdInt = eventId.toIntOrNull()
+                if (eventIdInt == null) {
+                    showError("Invalid event ID")
+                    return@launch
+                }
+                val response = apiService.deleteEvent(eventIdInt)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HomeActivity, "Event deleted", Toast.LENGTH_SHORT).show()
+                    loadDashboardSummary() // Refresh the data
+                } else {
+                    showError("Failed to delete event: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
     }
 
     private fun setupCurrentDate() {
@@ -118,6 +201,22 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        val historyButton = findViewById<ImageButton>(R.id.btn_history_menu)
+        historyButton.setOnClickListener { view ->
+            val popup = PopupMenu(this@HomeActivity, view)
+            popup.menuInflater.inflate(R.menu.home_menu, popup.menu)
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.action_history -> {
+                        startActivity(Intent(this, HistoryActivity::class.java))
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
+
         addTaskButton.setOnClickListener {
             startActivity(Intent(this, NewTaskActivity::class.java))
         }
@@ -145,7 +244,9 @@ class HomeActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val summary = response.body()
                     summary?.let {
-                        flowMessageTextView.text = "You have ${it.todaysFlow.percentage}% flow today!"
+                        val percentage = it.todaysFlow.percentage
+                        flowProgressBar.progress = percentage
+                        flowPercentageTextView.text = "$percentage%"
                         updateUpcomingTasks(it.upcomingTasks)
                         updateTodaysSchedule(it.todaysSchedule)
                     }
@@ -199,7 +300,8 @@ class HomeActivity : AppCompatActivity() {
         val dueDate = dialogView.findViewById<TextView>(R.id.tv_task_details_due_date)
         val dueTime = dialogView.findViewById<TextView>(R.id.tv_task_details_due_time)
         val priority = dialogView.findViewById<TextView>(R.id.tv_task_details_priority)
-        val closeButton = dialogView.findViewById<Button>(R.id.btn_close_details)
+        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_task)
+        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_task)
 
         title.text = task.title
         description.text = task.description ?: "No description available."
@@ -207,11 +309,49 @@ class HomeActivity : AppCompatActivity() {
         dueTime.text = task.time
         priority.text = task.priority.replaceFirstChar { it.uppercase() } + " Priority"
 
-        closeButton.setOnClickListener {
+        completeButton.setOnClickListener {
+            markTaskAsComplete(task.id)
+            dialog.dismiss()
+        }
+
+        deleteButton.setOnClickListener {
+            deleteTask(task.id)
             dialog.dismiss()
         }
 
         dialog.show()
+    }
+
+    private fun markTaskAsComplete(taskId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.updateTask(taskId, mapOf("isCompleted" to true))
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HomeActivity, "Task marked as complete", Toast.LENGTH_SHORT).show()
+                    loadDashboardSummary() // Refresh the data
+                } else {
+                    showError("Failed to update task: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun deleteTask(taskId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.deleteTask(taskId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HomeActivity, "Task deleted", Toast.LENGTH_SHORT).show()
+                    loadDashboardSummary() // Refresh the data
+                } else {
+                    showError("Failed to delete task: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
     }
 
     override fun onResume() {

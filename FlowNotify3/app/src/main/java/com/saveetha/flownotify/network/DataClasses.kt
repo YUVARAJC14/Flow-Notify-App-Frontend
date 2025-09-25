@@ -2,6 +2,7 @@ package com.saveetha.flownotify.network
 
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
+import java.util.Optional
 
 data class RegisterRequest(
     val fullName: String,
@@ -62,6 +63,17 @@ data class CreateEventRequest(
     val reminder: Int // in minutes before
 )
 
+data class Event(
+    val id: Int,
+    val title: String,
+    val date: String,
+    val startTime: String,
+    val endTime: String,
+    val location: String?,
+    val category: String,
+    val notes: String?
+) : Serializable
+
 // Data classes for Dashboard Summary Response
 
 data class DashboardSummaryResponse(
@@ -75,6 +87,7 @@ data class TodaysFlow(
 )
 
 data class UpcomingTask(
+    @SerializedName("id")
     val id: String,
     val title: String,
     val time: String,
@@ -91,15 +104,9 @@ data class ScheduleEvent(
     val category: String
 )
 
-data class Event(
-    val id: String,
-    val title: String,
-    val date: String,
-    val startTime: String,
-    val endTime: String,
-    val location: String?,
-    val category: String
-) : Serializable
+data class EventUpdateRequest(
+    val completed: Boolean
+)
 
 data class Task(
     val id: String,

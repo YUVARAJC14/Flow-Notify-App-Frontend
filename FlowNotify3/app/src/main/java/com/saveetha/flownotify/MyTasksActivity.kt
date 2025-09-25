@@ -18,8 +18,8 @@ import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.Task
 import kotlinx.coroutines.launch
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
-import com.saveetha.flownotify.network.TaskResponse
 
 class MyTasksActivity : AppCompatActivity() {
 
@@ -51,7 +51,7 @@ class MyTasksActivity : AppCompatActivity() {
     private fun initViews() {
         recyclerView = findViewById(R.id.rv_tasks)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        taskAdapter = TaskAdapter(emptyList()) { task ->
+        taskAdapter = TaskAdapter(emptyList<Any>()) { task ->
             showTaskDetailsDialog(task)
         }
         recyclerView.adapter = taskAdapter
@@ -203,19 +203,58 @@ class MyTasksActivity : AppCompatActivity() {
         val dueDate = dialogView.findViewById<TextView>(R.id.tv_task_details_due_date)
         val dueTime = dialogView.findViewById<TextView>(R.id.tv_task_details_due_time)
         val priority = dialogView.findViewById<TextView>(R.id.tv_task_details_priority)
-        val closeButton = dialogView.findViewById<Button>(R.id.btn_close_details)
+        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_task)
+        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_task)
 
         title.text = task.title
         description.text = task.description ?: "No description available."
         dueDate.text = task.dueDate
         dueTime.text = task.time
-        priority.text = task.priority.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() } + " Priority"
+        priority.text = task.priority.replaceFirstChar { it.uppercase() } + " Priority"
 
-        closeButton.setOnClickListener {
+        completeButton.setOnClickListener {
+            markTaskAsComplete(task.id)
+            dialog.dismiss()
+        }
+
+        deleteButton.setOnClickListener {
+            deleteTask(task.id)
             dialog.dismiss()
         }
 
         dialog.show()
+    }
+
+    private fun markTaskAsComplete(taskId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.updateTask(taskId, mapOf("isCompleted" to true))
+                if (response.isSuccessful) {
+                    Toast.makeText(this@MyTasksActivity, "Task marked as complete", Toast.LENGTH_SHORT).show()
+                    fetchTasks(currentFilter) // Refresh the data
+                } else {
+                    showError("Failed to update task: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun deleteTask(taskId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.deleteTask(taskId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@MyTasksActivity, "Task deleted", Toast.LENGTH_SHORT).show()
+                    fetchTasks(currentFilter) // Refresh the data
+                } else {
+                    showError("Failed to delete task: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
     }
 
     override fun onResume() {

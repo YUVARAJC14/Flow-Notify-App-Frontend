@@ -65,14 +65,20 @@ def read_events(
 @router.put("/{event_id}", response_model=schemas.Event)
 def update_event(
     event_id: int,
-    event: schemas.EventCreate,
+    event_update: schemas.EventUpdate,
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
     db_event = crud.get_event_by_id(db=db, event_id=event_id, user_id=current_user.id)
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
-    return crud.update_event(db=db, event=db_event, event_update=event)
+    
+    # Create a new object for the update to avoid directly modifying the ORM model with a Pydantic model
+    update_data = event_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_event, key, value)
+        
+    return crud.update_event(db=db, event=db_event, event_update=event_update)
 
 @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_event(

@@ -2,13 +2,12 @@ package com.saveetha.flownotify
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -299,7 +298,77 @@ class CalendarActivity : AppCompatActivity() {
                 }
                 cardRoot.setBackgroundResource(categoryDrawable)
 
+                eventView.setOnClickListener {
+                    showEventDetailsDialog(event)
+                }
+
                 scheduleContainer.addView(eventView)
+            }
+        }
+    }
+
+    private fun showEventDetailsDialog(event: Event) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
+        val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)
+        val date = dialogView.findViewById<TextView>(R.id.tv_event_details_date)
+        val time = dialogView.findViewById<TextView>(R.id.tv_event_details_time)
+        val location = dialogView.findViewById<TextView>(R.id.tv_event_details_location)
+        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_event)
+        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_event)
+
+        title.text = event.title
+        notes.text = event.notes ?: "No notes available."
+        date.text = event.date
+        time.text = "${event.startTime} - ${event.endTime}"
+        location.text = event.location ?: "No location specified."
+
+        completeButton.setOnClickListener {
+            markEventAsComplete(event.id)
+            dialog.dismiss()
+        }
+
+        deleteButton.setOnClickListener {
+            deleteEvent(event.id)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun markEventAsComplete(eventId: Int) {
+        lifecycleScope.launch {
+            try {
+                val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
+                val response = apiService.updateEvent(eventId, request)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@CalendarActivity, "Event marked as complete", Toast.LENGTH_SHORT).show()
+                    generateCalendar() // Refresh the data
+                } else {
+                    Toast.makeText(this@CalendarActivity, "Failed to update event: ${response.errorBody()?.string()}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@CalendarActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun deleteEvent(eventId: Int) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.deleteEvent(eventId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@CalendarActivity, "Event deleted", Toast.LENGTH_SHORT).show()
+                    generateCalendar() // Refresh the data
+                } else {
+                    Toast.makeText(this@CalendarActivity, "Failed to delete event: ${response.errorBody()?.string()}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@CalendarActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

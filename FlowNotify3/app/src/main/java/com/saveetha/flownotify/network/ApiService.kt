@@ -3,10 +3,14 @@ package com.saveetha.flownotify.network
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -40,4 +44,16 @@ interface ApiService {
 
     @GET("api/insights")
     suspend fun getInsights(@Query("period") period: String): Response<InsightsResponse>
+
+    @PATCH("api/tasks/{taskId}")
+    suspend fun updateTask(@Path("taskId") taskId: String, @Body body: Map<String, Boolean>): Response<Task>
+
+    @DELETE("api/tasks/{taskId}")
+    suspend fun deleteTask(@Path("taskId") taskId: String): Response<Unit>
+
+    @PUT("api/events/{eventId}")
+    suspend fun updateEvent(@Path("eventId") eventId: Int, @Body body: EventUpdateRequest): Response<Event>
+
+    @DELETE("api/events/{eventId}")
+    suspend fun deleteEvent(@Path("eventId") eventId: Int): Response<Unit>
 }

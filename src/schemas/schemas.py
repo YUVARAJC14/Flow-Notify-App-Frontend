@@ -182,6 +182,10 @@ class Event(EventBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class EventUpdate(BaseModel):
+    completed: bool
+
+
 class EventResponse(BaseModel):
     id: str
     title: str

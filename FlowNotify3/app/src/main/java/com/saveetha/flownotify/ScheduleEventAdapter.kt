@@ -8,7 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.saveetha.flownotify.network.ScheduleEvent
 
-class ScheduleEventAdapter(private var events: List<ScheduleEvent>) : RecyclerView.Adapter<ScheduleEventAdapter.EventViewHolder>() {
+class ScheduleEventAdapter(private var events: List<ScheduleEvent>, private val onEventClick: (ScheduleEvent) -> Unit) : RecyclerView.Adapter<ScheduleEventAdapter.EventViewHolder>() {
 
     class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.event_title)
@@ -27,6 +27,7 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>) : RecyclerVi
         holder.title.text = event.title
         holder.location.text = event.location
         holder.time.text = event.time
+        holder.itemView.setOnClickListener { onEventClick(event) }
     }
 
     override fun getItemCount(): Int = events.size

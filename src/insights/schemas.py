@@ -1,9 +1,13 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List
+
+class Comparison(BaseModel):
+    change: int
+    period: str
 
 class FlowScore(BaseModel):
     score: int
-    comparison: Dict[str, str]
+    comparison: Comparison
 
 class TaskCompletion(BaseModel):
     label: str
