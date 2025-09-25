@@ -165,11 +165,11 @@ class SupportActivity : AppCompatActivity() {
         // Update the UI based on availability
         if (isLiveChatAvailable) {
             liveChatStatusText.text = "Available Now"
-            liveChatStatusText.setTextColor(resources.getColor(R.color.chat_available, theme))
+            liveChatStatusText.setTextColor(resources.getColor(R.color.green, theme))
             startChatButton.isEnabled = true
         } else {
             liveChatStatusText.text = "Unavailable (9AM-5PM EST, Mon-Fri)"
-            liveChatStatusText.setTextColor(resources.getColor(R.color.chat_unavailable, theme))
+            liveChatStatusText.setTextColor(resources.getColor(R.color.red, theme))
             startChatButton.isEnabled = false
         }
     }

@@ -132,12 +132,12 @@ class CreateNewPasswordActivity : AppCompatActivity() {
     private fun updateRequirementStatus(icon: ImageView, text: TextView, isValid: Boolean) {
         if (isValid) {
             icon.setImageResource(R.drawable.ic_check_circle)
-            icon.setColorFilter(ContextCompat.getColor(this, R.color.password_strong))
-            text.setTextColor(ContextCompat.getColor(this, R.color.password_strong))
+            icon.setColorFilter(ContextCompat.getColor(this, R.color.green))
+            text.setTextColor(ContextCompat.getColor(this, R.color.green))
         } else {
             icon.setImageResource(R.drawable.ic_check_circle)
-            icon.setColorFilter(ContextCompat.getColor(this, R.color.grey))
-            text.setTextColor(ContextCompat.getColor(this, R.color.grey))
+            icon.setColorFilter(ContextCompat.getColor(this, R.color.gray))
+            text.setTextColor(ContextCompat.getColor(this, R.color.gray))
         }
     }
 
@@ -148,11 +148,11 @@ class CreateNewPasswordActivity : AppCompatActivity() {
         when {
             progress >= 80 -> {
                 passwordStrengthText.text = "Strong"
-                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.password_strong))
+                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.green))
             }
             progress >= 40 -> {
                 passwordStrengthText.text = "Medium"
-                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.password_medium))
+                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.green))
             }
             else -> {
                 passwordStrengthText.text = "Weak"

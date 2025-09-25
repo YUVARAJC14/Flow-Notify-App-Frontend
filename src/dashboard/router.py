@@ -18,7 +18,16 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: auth_mode
     """
     # 1. Get Today's Flow
     todays_flow_percentage = crud.get_today_progress(db, user_id=current_user.id)
-    flow_data = dashboard_schema.TodaysFlow(percentage=int(todays_flow_percentage))
+    flow_percentage = int(todays_flow_percentage)
+
+    if flow_percentage >= 80:
+        flow_message = "Great progress!"
+    elif 50 <= flow_percentage <= 79:
+        flow_message = "Keep going!"
+    else:
+        flow_message = "Stay focused!"
+
+    flow_data = dashboard_schema.TodaysFlow(percentage=flow_percentage, message=flow_message)
 
     # 2. Get Upcoming Tasks
     upcoming_tasks_db = crud.get_upcoming_tasks(db, user_id=current_user.id, limit=3)

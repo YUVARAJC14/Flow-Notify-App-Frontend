@@ -14,6 +14,7 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>) : RecyclerVi
         val title: TextView = itemView.findViewById(R.id.event_title)
         val location: TextView = itemView.findViewById(R.id.event_location)
         val time: TextView = itemView.findViewById(R.id.event_time)
+        val icon: View = itemView.findViewById(R.id.event_icon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
@@ -26,15 +27,6 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>) : RecyclerVi
         holder.title.text = event.title
         holder.location.text = event.location
         holder.time.text = event.time
-
-        val categoryDrawable = when (event.category.lowercase()) {
-            "work" -> R.drawable.bg_category_work
-            "personal" -> R.drawable.bg_category_personal
-            "health" -> R.drawable.bg_category_health
-            "social" -> R.drawable.bg_category_social
-            else -> R.drawable.bg_category_work
-        }
-        holder.itemView.setBackgroundResource(categoryDrawable)
     }
 
     override fun getItemCount(): Int = events.size

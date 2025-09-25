@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.saveetha.flownotify.network.ApiClient
 import com.saveetha.flownotify.network.ApiService
-import com.saveetha.flownotify.network.LoginRequest
 import com.saveetha.flownotify.network.LoginResponse
 import retrofit2.Call
 import retrofit2.Callback
@@ -85,9 +84,7 @@ class LoginActivity : AppCompatActivity() {
         signInButton.isEnabled = false
         signInButton.text = "Logging In..."
 
-        val request = LoginRequest(emailOrUsername, password)
-
-        apiService.login(request).enqueue(object : Callback<LoginResponse> {
+        apiService.login(emailOrUsername, password).enqueue(object : Callback<LoginResponse> {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 signInButton.isEnabled = true
                 signInButton.text = "Sign In"

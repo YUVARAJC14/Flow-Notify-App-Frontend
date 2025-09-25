@@ -149,11 +149,11 @@ class PrivacySettingsActivity : AppCompatActivity() {
         // Check Camera permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             cameraStatusText.text = "Permission granted"
-            cameraStatusText.setTextColor(ContextCompat.getColor(this, R.color.permission_granted))
+            cameraStatusText.setTextColor(ContextCompat.getColor(this, R.color.green))
             cameraPermissionButton.text = "Revoke"
         } else {
             cameraStatusText.text = "Required for profile photos and scanning documents"
-            cameraStatusText.setTextColor(ContextCompat.getColor(this, R.color.grey))
+            cameraStatusText.setTextColor(ContextCompat.getColor(this, R.color.gray))
             cameraPermissionButton.text = "Grant"
         }
 
@@ -164,11 +164,11 @@ class PrivacySettingsActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             storageStatusText.text = "Permission granted"
-            storageStatusText.setTextColor(ContextCompat.getColor(this, R.color.permission_granted))
+            storageStatusText.setTextColor(ContextCompat.getColor(this, R.color.green))
             storagePermissionButton.text = "Revoke"
         } else {
             storageStatusText.text = "Required for uploading and downloading files"
-            storageStatusText.setTextColor(ContextCompat.getColor(this, R.color.grey))
+            storageStatusText.setTextColor(ContextCompat.getColor(this, R.color.gray))
             storagePermissionButton.text = "Grant"
         }
 
@@ -179,11 +179,11 @@ class PrivacySettingsActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             calendarStatusText.text = "Permission granted"
-            calendarStatusText.setTextColor(ContextCompat.getColor(this, R.color.permission_granted))
+            calendarStatusText.setTextColor(ContextCompat.getColor(this, R.color.green))
             calendarPermissionButton.text = "Revoke"
         } else {
             calendarStatusText.text = "Required for syncing events with your device calendar"
-            calendarStatusText.setTextColor(ContextCompat.getColor(this, R.color.grey))
+            calendarStatusText.setTextColor(ContextCompat.getColor(this, R.color.gray))
             calendarPermissionButton.text = "Grant"
         }
     }

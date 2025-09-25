@@ -181,19 +181,19 @@ class ConnectedAccountsActivity : AppCompatActivity() {
         if (account.isConnected) {
             // Connected account UI
             statusText.text = "Connected as ${account.accountName}"
-            statusText.setTextColor(getColor(R.color.permission_granted))
+            statusText.setTextColor(getColor(R.color.green))
 
             if (accountKey == "slack") {
                 actionButton.text = "Manage"
                 actionButton.setTextColor(getColor(R.color.primary_blue))
             } else {
                 actionButton.text = "Disconnect"
-                actionButton.setTextColor(getColor(R.color.security_weak))
+                actionButton.setTextColor(getColor(R.color.red))
             }
         } else {
             // Not connected account UI
             statusText.text = "Not connected"
-            statusText.setTextColor(getColor(R.color.grey))
+            statusText.setTextColor(getColor(R.color.gray))
             actionButton.text = "Connect"
             actionButton.setTextColor(getColor(R.color.primary_blue))
         }

@@ -151,7 +151,7 @@ class ChangePasswordActivity : AppCompatActivity() {
             }
             score < 70 -> {
                 passwordStrengthText.text = "Medium"
-                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.password_medium))
+                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.orange))
 
                 val suggestion = when {
                     !hasUppercase -> "Add uppercase letters for stronger security."
@@ -164,7 +164,7 @@ class ChangePasswordActivity : AppCompatActivity() {
             }
             else -> {
                 passwordStrengthText.text = "Strong"
-                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.password_strong))
+                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.green))
                 passwordSuggestions.text = "Great password! It's strong and secure."
                 isPasswordValid = true
             }

@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["insights"]
 )
 
-@router.get("/insights", response_model=schemas_insights.Insights)
+@router.get("", response_model=schemas_insights.InsightsResponse)
 def get_insights(
     period: str = "week",
     db: Session = Depends(get_db),

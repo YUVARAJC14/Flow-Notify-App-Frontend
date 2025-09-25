@@ -13,7 +13,8 @@ class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>, private val onT
     class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.task_title)
         val time: TextView = itemView.findViewById(R.id.task_time)
-        val priorityDot: View = itemView.findViewById(R.id.task_priority_dot)
+        val priorityDot: View = itemView.findViewById(R.id.priority_dot)
+        val priorityBar: View = itemView.findViewById(R.id.priority_bar)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -28,12 +29,14 @@ class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>, private val onT
 
         // Set priority dot color
         val colorRes = when (task.priority.lowercase()) {
-            "high" -> R.color.priority_high
-            "medium" -> R.color.priority_medium
-            "low" -> R.color.priority_low
+            "high" -> R.color.red
+            "medium" -> R.color.orange
+            "low" -> R.color.green
             else -> R.color.gray // Default color
         }
-        holder.priorityDot.background.setTint(ContextCompat.getColor(holder.itemView.context, colorRes))
+        val color = ContextCompat.getColor(holder.itemView.context, colorRes)
+        holder.priorityDot.background.setTint(color)
+        holder.priorityBar.setBackgroundColor(color)
         holder.itemView.setOnClickListener { onTaskClick(task) }
     }
 

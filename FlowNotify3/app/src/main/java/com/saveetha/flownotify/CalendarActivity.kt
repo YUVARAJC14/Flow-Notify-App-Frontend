@@ -69,12 +69,21 @@ class CalendarActivity : AppCompatActivity() {
             }
 
             if (newEvent != null) {
-                Log.d("CalendarActivity", "Successfully received new event: ${newEvent.title}")
-                monthlyEvents.add(newEvent)
-                redrawCalendar()
+                val eventCalendar = Calendar.getInstance().apply {
+                    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    time = sdf.parse(newEvent.date)!!
+                }
+
+                if (eventCalendar.get(Calendar.YEAR) == currentMonth.get(Calendar.YEAR) &&
+                    eventCalendar.get(Calendar.MONTH) == currentMonth.get(Calendar.MONTH)) {
+                    monthlyEvents.add(newEvent)
+                    redrawCalendar()
+                } else {
+                    currentMonth = eventCalendar
+                    generateCalendar()
+                }
             } else {
                 Log.e("CalendarActivity", "Failed to retrieve new_event from result. Forcing network refresh.")
-                // Fallback to be safe
                 generateCalendar()
             }
         }

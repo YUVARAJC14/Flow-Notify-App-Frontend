@@ -115,138 +115,106 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Upcoming Tasks Section -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_upcoming_tasks"
+            <!-- Upcoming Tasks Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Upcoming Tasks"
+                android:textColor="#333333"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/upcoming_tasks_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_upcoming_task"
+                tools:itemCount="3"/>
+
+            <!-- Empty state for tasks -->
+            <LinearLayout
+                android:id="@+id/empty_upcoming_tasks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp">
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="No upcoming tasks"
+                    android:textColor="#9E9E9E"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Upcoming Tasks"
-                        android:textColor="#333333"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <!-- Tasks list container - Will be populated from backend -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/upcoming_tasks_recyclerview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-                    <!-- Empty state for tasks -->
-                    <LinearLayout
-                        android:id="@+id/empty_upcoming_tasks"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:visibility="visible">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="No upcoming tasks"
-                            android:textColor="#9E9E9E"
-                            android:textSize="14sp" />
-
-                        <Button
-                            android:id="@+id/btn_add_task"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:layout_marginTop="8dp"
-                            android:backgroundTint="@color/blue"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:text="Add Task"
-                            android:textAllCaps="false"
-                            android:textColor="@color/white"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                <Button
+                    android:id="@+id/btn_add_task"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/blue"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Add Task"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <!-- Today's Schedule Section -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_todays_schedule"
+            <!-- Today's Schedule Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Today's Schedule"
+                android:textColor="#333333"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/schedule_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:itemCount="1"
+                tools:listitem="@layout/item_home_event" />
+
+            <!-- Empty state for schedule -->
+            <LinearLayout
+                android:id="@+id/empty_schedule"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp">
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="No events scheduled today"
+                    android:textColor="#9E9E9E"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Today's Schedule"
-                        android:textColor="#333333"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <!-- Schedule list container - Will be populated from backend -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/schedule_recyclerview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:clipToPadding="false"
-            android:nestedScrollingEnabled="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:itemCount="2"
-            tools:listitem="@layout/item_home_event" />
-
-                    <!-- Empty state for schedule -->
-                    <LinearLayout
-                        android:id="@+id/empty_schedule"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:visibility="visible">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="No events scheduled today"
-                            android:textColor="#9E9E9E"
-                            android:textSize="14sp" />
-
-                        <Button
-                            android:id="@+id/btn_add_event"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:layout_marginTop="8dp"
-                            android:backgroundTint="@color/blue"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:text="Add Event"
-                            android:textAllCaps="false"
-                            android:textColor="@color/white"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                <Button
+                    android:id="@+id/btn_add_event"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/blue"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Add Event"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

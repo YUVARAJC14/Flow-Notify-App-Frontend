@@ -181,6 +181,16 @@ class Event(EventBase):
     owner_id: str
     model_config = ConfigDict(from_attributes=True)
 
+
+class EventResponse(BaseModel):
+    id: str
+    title: str
+    date: str
+    startTime: str
+    endTime: str
+    location: Optional[str] = None
+    category: str
+
 class GoalStatusEnum(str, Enum):
     not_started = "Not Started"
     in_progress = "In Progress"

@@ -143,6 +143,23 @@
                         android:textColor="#4CAF50"
                         android:textSize="14sp" />
 
+                    <TextView
+                        android:id="@+id/tv_flow_score"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:textColor="@color/black"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_flow_score_comparison"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:textColor="#4CAF50"
+                        android:textSize="14sp" />
+
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

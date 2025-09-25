@@ -3,6 +3,7 @@ from typing import List, Optional
 
 class TodaysFlow(BaseModel):
     percentage: int
+    message: str
 
 class UpcomingTask(BaseModel):
     id: str

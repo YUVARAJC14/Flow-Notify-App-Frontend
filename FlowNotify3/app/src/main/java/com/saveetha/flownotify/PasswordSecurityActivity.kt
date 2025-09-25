@@ -158,7 +158,7 @@ class PasswordSecurityActivity : AppCompatActivity() {
         // Set password last changed date
         val passwordChangeDate = calculateDateFromDaysAgo(90)
         passwordLastChangedText.text = "Last changed ${getDaysAgoText(90)}"
-        passwordLastChangedText.setTextColor(ContextCompat.getColor(this, R.color.security_weak))
+        passwordLastChangedText.setTextColor(ContextCompat.getColor(this, R.color.red))
 
         // Set recovery options status
         recoveryOptionsStatusText.text = "Email and recovery phone set"
@@ -167,10 +167,10 @@ class PasswordSecurityActivity : AppCompatActivity() {
         val twoFactorEnabled = preferences.getBoolean("two_factor_enabled", false)
         if (twoFactorEnabled) {
             twoFactorStatusText.text = "Enabled"
-            twoFactorStatusText.setTextColor(ContextCompat.getColor(this, R.color.security_strong))
+            twoFactorStatusText.setTextColor(ContextCompat.getColor(this, R.color.green))
         } else {
             twoFactorStatusText.text = "Not enabled (Recommended)"
-            twoFactorStatusText.setTextColor(ContextCompat.getColor(this, R.color.security_weak))
+            twoFactorStatusText.setTextColor(ContextCompat.getColor(this, R.color.red))
         }
 
         // Set auth apps status
@@ -249,9 +249,9 @@ class PasswordSecurityActivity : AppCompatActivity() {
         when {
             score >= 80 -> {
                 securityStatusText.text = "Your account security is strong"
-                securityStatusText.setTextColor(ContextCompat.getColor(this, R.color.security_strong))
+                securityStatusText.setTextColor(ContextCompat.getColor(this, R.color.green))
                 findViewById<androidx.appcompat.widget.AppCompatImageView>(R.id.iv_security_status).setColorFilter(
-                    ContextCompat.getColor(this, R.color.security_strong)
+                    ContextCompat.getColor(this, R.color.green)
                 )
             }
             score >= 60 -> {
@@ -263,9 +263,9 @@ class PasswordSecurityActivity : AppCompatActivity() {
             }
             else -> {
                 securityStatusText.text = "Your account security is at risk"
-                securityStatusText.setTextColor(ContextCompat.getColor(this, R.color.security_weak))
+                securityStatusText.setTextColor(ContextCompat.getColor(this, R.color.red))
                 findViewById<androidx.appcompat.widget.AppCompatImageView>(R.id.iv_security_status).setColorFilter(
-                    ContextCompat.getColor(this, R.color.security_weak)
+                    ContextCompat.getColor(this, R.color.red)
                 )
             }
         }

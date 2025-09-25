@@ -2,18 +2,20 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 class FlowScore(BaseModel):
-    score: float
-    comparisonText: str
+    score: int
+    comparison: Dict[str, str]
 
 class TaskCompletion(BaseModel):
-    labels: List[str]
-    data: List[int]
+    label: str
+    completed: int
+    total: int
 
-class ProductiveTimes(BaseModel):
-    labels: List[str]
-    data: List[List[int]]
+class ProductiveTime(BaseModel):
+    day: int
+    hour: int
+    intensity: float
 
-class Insights(BaseModel):
+class InsightsResponse(BaseModel):
     flowScore: FlowScore
-    taskCompletion: TaskCompletion
-    productiveTimes: ProductiveTimes
+    taskCompletion: List[TaskCompletion]
+    productiveTimes: List[ProductiveTime]

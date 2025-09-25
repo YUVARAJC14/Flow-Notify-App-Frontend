@@ -15,7 +15,7 @@ router = APIRouter(
     tags=["events"]
 )
 
-@router.post("", response_model=schemas.Event, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=schemas.EventResponse, status_code=status.HTTP_201_CREATED)
 def create_event(
     event_request: schemas.EventCreateRequest,
     db: Session = Depends(get_db),
@@ -41,7 +41,17 @@ def create_event(
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    return crud.create_user_event(db=db, event=event_data, user_id=current_user.id)
+    created_event = crud.create_user_event(db=db, event=event_data, user_id=current_user.id)
+
+    return schemas.EventResponse(
+        id=str(created_event.id),
+        title=created_event.title,
+        date=created_event.start_datetime.strftime('%Y-%m-%d'),
+        startTime=created_event.start_datetime.strftime('%H:%M'),
+        endTime=created_event.end_datetime.strftime('%H:%M'),
+        location=created_event.location,
+        category=created_event.category.value,
+    )
 
 @router.get("", response_model=List[schemas.Event])
 def read_events(

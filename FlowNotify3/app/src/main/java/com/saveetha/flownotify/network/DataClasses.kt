@@ -14,11 +14,6 @@ data class RegisterResponse(
     val user: User
 )
 
-data class LoginRequest(
-    val email: String,
-    val password: String
-)
-
 data class LoginResponse(
     @SerializedName("accessToken")
     val accessToken: String,
@@ -114,4 +109,34 @@ data class Task(
     val time: String,
     val priority: String,
     val isCompleted: Boolean
+)
+
+// Data classes for Insights
+
+data class InsightsResponse(
+    val flowScore: FlowScore,
+    val taskCompletion: List<TaskCompletion>,
+    val productiveTimes: List<ProductiveTime>
+)
+
+data class FlowScore(
+    val score: Int,
+    val comparison: Comparison
+)
+
+data class Comparison(
+    val change: Int,
+    val period: String
+)
+
+data class TaskCompletion(
+    val label: String,
+    val completed: Int,
+    val total: Int
+)
+
+data class ProductiveTime(
+    val day: Int,
+    val hour: Int,
+    val intensity: Float
 )

@@ -178,6 +178,8 @@ def get_completed_tasks_by_date_range(db: Session, user_id: int, start_date: dat
 
 def get_today_progress(db: Session, user_id: int) -> float:
     today = date.today()
+
+    # Get tasks for today
     total_tasks_today = db.query(task_models.Task).filter(
         task_models.Task.owner_id == user_id,
         task_models.Task.due_date == today
@@ -188,9 +190,24 @@ def get_today_progress(db: Session, user_id: int) -> float:
         task_models.Task.completed == True
     ).count()
 
-    if total_tasks_today == 0:
-        return 100.0  # If no tasks, consider 100% complete
-    return (completed_tasks_today / total_tasks_today) * 100
+    # Get events for today
+    start_of_day = datetime.combine(today, datetime.min.time())
+    end_of_day = datetime.combine(today, datetime.max.time())
+    total_events_today = db.query(event_models.Event).filter(
+        event_models.Event.owner_id == user_id,
+        event_models.Event.start_datetime >= start_of_day,
+        event_models.Event.start_datetime <= end_of_day
+    ).count()
+    # Assuming events are implicitly 'completed' once they happen, we can count all of them.
+    # If events have a completion status, this would need to be adjusted.
+    completed_events_today = total_events_today
+
+    total_items = total_tasks_today + total_events_today
+    completed_items = completed_tasks_today + completed_events_today
+
+    if total_items == 0:
+        return 0.0
+    return (completed_items / total_items) * 100
 
 def get_upcoming_tasks(db: Session, user_id: int, limit: int = 3):
     today = date.today()

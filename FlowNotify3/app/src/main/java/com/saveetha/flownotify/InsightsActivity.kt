@@ -10,6 +10,7 @@ import android.widget.TextView
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
@@ -17,6 +18,11 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.saveetha.flownotify.network.ApiClient
+import com.saveetha.flownotify.network.ApiService
+import com.saveetha.flownotify.network.InsightsResponse
+import com.saveetha.flownotify.network.TaskCompletion
+import kotlinx.coroutines.launch
 
 class InsightsActivity : AppCompatActivity() {
 
@@ -26,10 +32,12 @@ class InsightsActivity : AppCompatActivity() {
     private lateinit var filterWeek: TextView
     private lateinit var filterMonth: TextView
     private lateinit var filterYear: TextView
+    private lateinit var flowScoreTextView: TextView
+    private lateinit var flowScoreComparisonTextView: TextView
 
-    // Example data
-    private val taskCompletionData = listOf(7, 9, 11, 6, 8, 5, 4)
-    private val weekDays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    private val apiService: ApiService by lazy {
+        ApiClient.getInstance(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +46,7 @@ class InsightsActivity : AppCompatActivity() {
         initViews()
         setupBottomNavigation()
         setupFilterListeners()
-        setupBarChart()
-        setupHeatmap()
+        updateDataForTimeframe("week")
     }
 
     private fun initViews() {
@@ -49,6 +56,8 @@ class InsightsActivity : AppCompatActivity() {
         filterWeek = findViewById(R.id.filter_week)
         filterMonth = findViewById(R.id.filter_month)
         filterYear = findViewById(R.id.filter_year)
+        flowScoreTextView = findViewById(R.id.tv_flow_score)
+        flowScoreComparisonTextView = findViewById(R.id.tv_flow_score_comparison)
     }
 
     private fun setupBottomNavigation() {
@@ -115,17 +124,33 @@ class InsightsActivity : AppCompatActivity() {
     }
 
     private fun updateDataForTimeframe(timeframe: String) {
-        // In a real app, you'd fetch data from your backend for the selected timeframe
-        // For this example, we'll just update the chart with the same data
-        setupBarChart()
+        lifecycleScope.launch {
+            try {
+                val response = apiService.getInsights(timeframe)
+                if (response.isSuccessful) {
+                    val insights = response.body()
+                    insights?.let {
+                        flowScoreTextView.text = "${it.flowScore.score}%"
+                        flowScoreComparisonTextView.text = "${it.flowScore.comparison.change}% ${it.flowScore.comparison.period}"
+                        setupBarChart(it.taskCompletion)
+                        setupHeatmap(it.productiveTimes)
+                    }
+                } else {
+                    // Handle error
+                }
+            } catch (e: Exception) {
+                // Handle exception
+            }
+        }
     }
 
-    private fun setupBarChart() {
+    private fun setupBarChart(taskCompletion: List<TaskCompletion>) {
         val entries = ArrayList<BarEntry>()
+        val labels = ArrayList<String>()
 
-        // Add data points
-        for (i in taskCompletionData.indices) {
-            entries.add(BarEntry(i.toFloat(), taskCompletionData[i].toFloat()))
+        taskCompletion.forEachIndexed { index, completion ->
+            entries.add(BarEntry(index.toFloat(), completion.completed.toFloat()))
+            labels.add(completion.label)
         }
 
         val dataSet = BarDataSet(entries, "Tasks Completed")
@@ -152,7 +177,7 @@ class InsightsActivity : AppCompatActivity() {
         xAxis.setDrawGridLines(false)
         xAxis.setDrawAxisLine(true)
         xAxis.axisLineColor = Color.parseColor("#E0E0E0")
-        xAxis.valueFormatter = IndexAxisValueFormatter(weekDays)
+        xAxis.valueFormatter = IndexAxisValueFormatter(labels)
         xAxis.granularity = 1f
 
         // Style Y axis
@@ -161,8 +186,6 @@ class InsightsActivity : AppCompatActivity() {
         leftAxis.gridColor = Color.parseColor("#E0E0E0")
         leftAxis.setDrawAxisLine(true)
         leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 12f
-        leftAxis.granularity = 3f
 
         val rightAxis = barChart.axisRight
         rightAxis.isEnabled = false
@@ -172,19 +195,10 @@ class InsightsActivity : AppCompatActivity() {
         barChart.invalidate()
     }
 
-    private fun setupHeatmap() {
+    private fun setupHeatmap(productiveTimes: List<com.saveetha.flownotify.network.ProductiveTime>) {
+        heatmapContainer.removeAllViews()
         // Time slots (24-hour format)
         val timeSlots = listOf("9", "12", "15", "18", "21")
-
-        // Example productivity data (random)
-        // 0 = no data, 1 = low, 2 = medium, 3 = high productivity
-        val productivityData = arrayOf(
-            intArrayOf(0, 3, 3, 0, 3, 2, 1), // 9 AM
-            intArrayOf(2, 1, 2, 3, 0, 3, 2), // 12 PM
-            intArrayOf(3, 0, 1, 2, 3, 0, 0), // 3 PM
-            intArrayOf(1, 2, 0, 1, 2, 1, 0), // 6 PM
-            intArrayOf(0, 0, 1, 0, 0, 0, 1)  // 9 PM
-        )
 
         // Create rows for each time slot
         for (timeIndex in timeSlots.indices) {
@@ -219,14 +233,14 @@ class InsightsActivity : AppCompatActivity() {
                 cellParams.setMargins(4, 4, 4, 4)
                 cell.layoutParams = cellParams
 
+                val intensity = productiveTimes.find { it.day == dayIndex && it.hour == timeSlots[timeIndex].toInt() }?.intensity ?: 0f
+
                 // Set background color based on productivity level
-                val productivityLevel = productivityData[timeIndex][dayIndex]
-                val backgroundColor = when (productivityLevel) {
-                    0 -> Color.parseColor("#F5F5F5") // No data
-                    1 -> Color.parseColor("#BBDEFB") // Low
-                    2 -> Color.parseColor("#64B5F6") // Medium
-                    3 -> Color.parseColor("#2196F3") // High
-                    else -> Color.parseColor("#F5F5F5")
+                val backgroundColor = when {
+                    intensity > 0.7 -> Color.parseColor("#2196F3") // High
+                    intensity > 0.4 -> Color.parseColor("#64B5F6") // Medium
+                    intensity > 0 -> Color.parseColor("#BBDEFB") // Low
+                    else -> Color.parseColor("#F5F5F5") // No data
                 }
                 cell.setBackgroundColor(backgroundColor)
 
