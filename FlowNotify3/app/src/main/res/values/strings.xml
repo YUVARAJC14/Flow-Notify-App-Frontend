@@ -4,6 +4,7 @@
     <string name="search_icon">Search Icon</string>
     <string name="empty_tasks">No Tasks Found</string>
     <string name="add_new_task">Add New Task</string>
+    <string name="event_title_icon">Event Title</string>
     <string name="close">Close</string>
     <string name="location">Location</string>
     <string name="calendar">Calendar</string>

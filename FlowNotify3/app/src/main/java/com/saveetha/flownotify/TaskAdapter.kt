@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -21,7 +22,7 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
         val title: TextView = itemView.findViewById(R.id.task_title)
         val time: TextView = itemView.findViewById(R.id.task_time)
         val priorityDot: View = itemView.findViewById(R.id.task_priority_dot)
-        val checkBox: CheckBox = itemView.findViewById(R.id.task_checkbox)
+        val checkBoxImage: ImageView = itemView.findViewById(R.id.task_checkbox_image)
     }
 
     class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -53,7 +54,8 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
             val task = items[position] as Task
             holder.title.text = task.title
             holder.time.text = task.time
-            holder.checkBox.isChecked = task.isCompleted
+            holder.checkBoxImage.setImageResource(if (task.isCompleted) R.drawable.checkbox_selector else R.drawable.checkbox_selector)
+            holder.checkBoxImage.setImageState(intArrayOf(if (task.isCompleted) android.R.attr.state_checked else -android.R.attr.state_checked), false)
 
             val colorRes = when (task.priority.lowercase()) {
                 "high" -> R.color.priority_high
@@ -65,11 +67,16 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
 
             holder.itemView.setOnClickListener { onTaskClick(task) }
 
-            holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
+            holder.checkBoxImage.setOnClickListener { view ->
+                val isChecked = !task.isCompleted
                 val updatedTask = task.copy(isCompleted = isChecked)
                 val mutableItems = items.toMutableList()
                 mutableItems[position] = updatedTask
                 items = mutableItems
+                notifyItemChanged(position)
+                // Trigger the onTaskClick callback with the updated task to handle completion logic
+                onTaskClick(updatedTask)
+                view.performClick() // Simulate a click to trigger the state change drawable
             }
         }
     }

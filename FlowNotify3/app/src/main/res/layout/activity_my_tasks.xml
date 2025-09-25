@@ -71,7 +71,9 @@
                 android:hint="Search tasks..."
                 android:imeOptions="actionSearch"
                 android:inputType="text"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/gray" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

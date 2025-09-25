@@ -52,6 +52,14 @@ class MyTasksActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.rv_tasks)
         recyclerView.layoutManager = LinearLayoutManager(this)
         taskAdapter = TaskAdapter(emptyList<Any>()) { task ->
+            if (task.isCompleted) {
+                markTaskAsComplete(task.id)
+            } else {
+                // If unchecked, you might want to mark it as incomplete or do nothing
+                // For now, we'll assume clicking it means it's completed.
+                // If you need to mark as incomplete, you'd need a separate API call.
+            }
+            // Also show details if needed, but the primary action is completion
             showTaskDetailsDialog(task)
         }
         recyclerView.adapter = taskAdapter

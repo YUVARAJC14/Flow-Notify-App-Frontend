@@ -62,18 +62,35 @@
             android:paddingBottom="24dp">
 
             <!-- Event Title -->
-            <EditText
-                android:id="@+id/et_event_title"
+            <LinearLayout
+                android:id="@+id/layout_event_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/edittext_background"
-                android:hint="        Event title"
-                android:inputType="text"
+                android:gravity="center_vertical"
                 android:minHeight="48dp"
-                android:paddingVertical="8dp"
-                android:textSize="16sp"
-                android:textColor="@color/black"
-                android:textColorHint="@color/gray" />
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/event_title_icon"
+                    android:src="@drawable/ic_edit" />
+
+                <EditText
+                    android:id="@+id/et_event_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@null"
+                    android:hint="Event title"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray" />
+            </LinearLayout>
 
             <!-- Location -->
             <LinearLayout

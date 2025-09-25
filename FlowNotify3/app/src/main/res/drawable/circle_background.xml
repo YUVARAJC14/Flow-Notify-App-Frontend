@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="#F2F2F2" />
+    <solid android:color="#FF0000" /> <!-- Default color, will be tinted programmatically -->
+    <size
+        android:width="10dp"
+        android:height="10dp" />
 </shape>
