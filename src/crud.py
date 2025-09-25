@@ -260,11 +260,11 @@ def create_user_event(db: Session, event: schemas_all.EventCreate, user_id: int)
 def get_events(db: Session, user_id: int, start_date: date = None, end_date: date = None, category: schemas_all.CategoryEnum = None):
     query = db.query(event_models.Event).filter(event_models.Event.owner_id == user_id)
     if start_date:
-        start_datetime = datetime.combine(start_date, datetime.min.time())
-        query = query.filter(event_models.Event.start_datetime >= start_datetime)
+        start_datetime_query = datetime.combine(start_date, datetime.min.time())
+        query = query.filter(event_models.Event.end_datetime >= start_datetime_query) # Event must end after or on query start
     if end_date:
-        end_datetime = datetime.combine(end_date, datetime.max.time())
-        query = query.filter(event_models.Event.end_datetime <= end_datetime)
+        end_datetime_query = datetime.combine(end_date, datetime.max.time())
+        query = query.filter(event_models.Event.start_datetime <= end_datetime_query) # Event must start before or on query end
     if category:
         query = query.filter(event_models.Event.category == category)
     return query.all()
@@ -276,6 +276,14 @@ def update_event(db: Session, event: event_models.Event, event_update: schemas_a
     event_data = event_update.model_dump(exclude_unset=True)
     for key, value in event_data.items():
         setattr(event, key, value)
+
+    # Handle completed_at timestamp for events
+    if "completed" in event_data:
+        if event_data["completed"] and event.completed_at is None:
+            event.completed_at = datetime.now()
+        elif not event_data["completed"] and event.completed_at is not None:
+            event.completed_at = None
+
     db.add(event)
     db.commit()
     db.refresh(event)
