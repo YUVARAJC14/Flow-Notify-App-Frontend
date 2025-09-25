@@ -26,12 +26,36 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+
 class HomeActivity : AppCompatActivity() {
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(this, "Notifications permission denied. You will not receive reminders.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
 
     private lateinit var greetingTextView: TextView
     private lateinit var dateTextView: TextView
     private lateinit var flowPercentageTextView: TextView
-    private lateinit var flowProgressBar: ProgressBar
+    private lateinit var flowPieChart: PieChartView // Changed
+    private lateinit var flowMessageTextView: TextView // Added
     private lateinit var upcomingTasksRecyclerView: RecyclerView
     private lateinit var scheduleRecyclerView: RecyclerView
     private lateinit var emptyUpcomingTasks: LinearLayout
@@ -54,6 +78,7 @@ class HomeActivity : AppCompatActivity() {
         setupCurrentDate()
         setupBottomNavigation()
         setupListeners()
+        askNotificationPermission() // Call permission request
 
         loadInitialData()
     }
@@ -62,7 +87,8 @@ class HomeActivity : AppCompatActivity() {
         greetingTextView = findViewById(R.id.tv_greeting)
         dateTextView = findViewById(R.id.tv_date)
         flowPercentageTextView = findViewById(R.id.tv_flow_percentage)
-        flowProgressBar = findViewById(R.id.progress_bar_flow)
+        flowMessageTextView = findViewById(R.id.tv_flow_message) // Added
+        flowPieChart = findViewById(R.id.pie_chart_flow) // Changed
         upcomingTasksRecyclerView = findViewById(R.id.upcoming_tasks_recyclerview)
         scheduleRecyclerView = findViewById(R.id.schedule_recyclerview) // Changed
         emptyUpcomingTasks = findViewById(R.id.empty_upcoming_tasks)
@@ -245,8 +271,16 @@ class HomeActivity : AppCompatActivity() {
                     val summary = response.body()
                     summary?.let {
                         val percentage = it.todaysFlow.percentage
-                        flowProgressBar.progress = percentage
+                        flowPieChart.setPercentage(percentage.toFloat()) // Changed
                         flowPercentageTextView.text = "$percentage%"
+
+                        // Set flow message based on percentage
+                        flowMessageTextView.text = when {
+                            percentage >= 80 -> "Great progress!"
+                            percentage >= 50 -> "Keep going!"
+                            else -> "Stay focused!"
+                        }
+
                         updateUpcomingTasks(it.upcomingTasks)
                         updateTodaysSchedule(it.todaysSchedule)
                     }

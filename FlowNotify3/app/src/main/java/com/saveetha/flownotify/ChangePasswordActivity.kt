@@ -145,7 +145,7 @@ class ChangePasswordActivity : AppCompatActivity() {
         when {
             score < 40 -> {
                 passwordStrengthText.text = "Weak"
-                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.password_weak))
+                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.red))
                 passwordSuggestions.text = "Add more characters, including uppercase letters, numbers, and symbols."
                 isPasswordValid = false
             }

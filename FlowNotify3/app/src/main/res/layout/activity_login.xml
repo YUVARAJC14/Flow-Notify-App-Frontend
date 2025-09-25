@@ -50,7 +50,9 @@
             android:background="@drawable/edittext_background"
             android:hint="Email or username"
             android:inputType="textEmailAddress"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/gray" />
 
         <!-- Password -->
         <EditText
@@ -61,7 +63,9 @@
             android:background="@drawable/edittext_background"
             android:hint="Password"
             android:inputType="textPassword"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/gray" />
 
         <!-- Forgot Password -->
         <TextView

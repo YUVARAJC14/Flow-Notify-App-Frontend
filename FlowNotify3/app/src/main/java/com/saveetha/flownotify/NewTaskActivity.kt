@@ -232,8 +232,22 @@ class NewTaskActivity : AppCompatActivity() {
                 btnSaveTask.text = "Save Task"
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@NewTaskActivity, "Task created successfully!", Toast.LENGTH_SHORT).show()
-                    finish()
+                    val taskResponse = response.body()
+                    if (taskResponse != null) {
+                        Toast.makeText(this@NewTaskActivity, "Task created successfully!", Toast.LENGTH_SHORT).show()
+
+                        // Schedule notification
+                        val reminders = getEnabledReminders()
+                        if (reminders.isNotEmpty()) {
+                            // Assuming only one reminder for now
+                            val reminderTime = calendar.timeInMillis
+                            NotificationScheduler.scheduleNotification(this@NewTaskActivity, reminderTime, taskResponse.id, "Task", taskResponse.title)
+                        }
+
+                        finish()
+                    } else {
+                        Toast.makeText(this@NewTaskActivity, "Failed to create task: Response body is null", Toast.LENGTH_LONG).show()
+                    }
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Toast.makeText(this@NewTaskActivity, "Failed to create task: $errorBody", Toast.LENGTH_LONG).show()

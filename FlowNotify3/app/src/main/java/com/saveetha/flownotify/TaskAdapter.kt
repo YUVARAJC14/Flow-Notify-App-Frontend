@@ -71,13 +71,6 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
                 mutableItems[position] = updatedTask
                 items = mutableItems
             }
-
-            holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-                val updatedTask = task.copy(isCompleted = isChecked)
-                val mutableItems = items.toMutableList()
-                mutableItems[position] = updatedTask
-                items = mutableItems
-            }
         }
     }
 

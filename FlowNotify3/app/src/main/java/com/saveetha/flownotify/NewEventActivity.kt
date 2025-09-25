@@ -309,6 +309,21 @@ class NewEventActivity : AppCompatActivity() {
                     val newEvent = response.body()
                     if (newEvent != null) {
                         Toast.makeText(this@NewEventActivity, "Event created successfully", Toast.LENGTH_SHORT).show()
+
+                        // Schedule notification
+                        val reminderMinutes = getReminderInMinutes()
+                        if (reminderMinutes > 0) {
+                            val calendar = Calendar.getInstance().apply {
+                                set(Calendar.YEAR, this@NewEventActivity.calendar.get(Calendar.YEAR))
+                                set(Calendar.MONTH, this@NewEventActivity.calendar.get(Calendar.MONTH))
+                                set(Calendar.DAY_OF_MONTH, this@NewEventActivity.calendar.get(Calendar.DAY_OF_MONTH))
+                                set(Calendar.HOUR_OF_DAY, startTimeHour)
+                                set(Calendar.MINUTE, startTimeMinute)
+                                add(Calendar.MINUTE, -reminderMinutes)
+                            }
+                            NotificationScheduler.scheduleNotification(this@NewEventActivity, calendar.timeInMillis, newEvent.id.toString(), "Event", newEvent.title)
+                        }
+
                         val resultIntent = Intent()
                         resultIntent.putExtra("new_event", newEvent as java.io.Serializable)
                         setResult(Activity.RESULT_OK, resultIntent)

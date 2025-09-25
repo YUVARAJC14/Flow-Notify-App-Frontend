@@ -156,7 +156,7 @@ class CreateNewPasswordActivity : AppCompatActivity() {
             }
             else -> {
                 passwordStrengthText.text = "Weak"
-                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.password_weak))
+                passwordStrengthText.setTextColor(ContextCompat.getColor(this, R.color.red))
             }
         }
     }

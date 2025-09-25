@@ -256,9 +256,9 @@ class PasswordSecurityActivity : AppCompatActivity() {
             }
             score >= 60 -> {
                 securityStatusText.text = "Your account security needs attention"
-                securityStatusText.setTextColor(ContextCompat.getColor(this, R.color.security_medium))
+                securityStatusText.setTextColor(ContextCompat.getColor(this, R.color.orange))
                 findViewById<androidx.appcompat.widget.AppCompatImageView>(R.id.iv_security_status).setColorFilter(
-                    ContextCompat.getColor(this, R.color.security_medium)
+                    ContextCompat.getColor(this, R.color.orange)
                 )
             }
             else -> {
