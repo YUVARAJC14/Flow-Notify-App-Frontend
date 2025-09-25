@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Date, Boolean
 from sqlalchemy.orm import relationship
 from ..database.base import Base
 import enum
@@ -23,6 +23,7 @@ class Event(Base):
     reminder_minutes_before = Column(Integer, nullable=True)
     recurrence_rule = Column(String, nullable=True) # Stores RRULE for recurring events
     recurrence_end_date = Column(Date, nullable=True) # When the recurrence ends
+    completed = Column(Boolean, default=False) # Added completed field
     owner_id = Column(String, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="events")
