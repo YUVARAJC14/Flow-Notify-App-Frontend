@@ -68,7 +68,8 @@ class CalendarActivity : AppCompatActivity() {
     }
 
     private fun handleTopNotch() {
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
+        val headerContainer = findViewById<View>(R.id.header_container)
+        ViewCompat.setOnApplyWindowInsetsListener(headerContainer) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(view.paddingLeft, systemBars.top, view.paddingRight, view.paddingBottom)
             insets
