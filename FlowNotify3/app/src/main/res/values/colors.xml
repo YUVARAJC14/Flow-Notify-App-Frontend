@@ -13,11 +13,11 @@
     <color name="priority_medium">#FF9500</color> <!-- Orange -->
     <color name="priority_low">#34C759</color> <!-- Green -->
 
-    <color name="category_work">#007AFF</color> <!-- Blue -->
-    <color name="category_personal">#34C759</color> <!-- Green -->
-    <color name="category_social">#FF9500</color> <!-- Orange -->
-    <color name="category_health">#FF3B30</color> <!-- Red -->
-    <color name="category_other">#8E8E93</color> <!-- Gray -->
+    <color name="category_work">#A8D4FF</color> <!-- Light Blue -->
+    <color name="category_personal">#B3E6C5</color> <!-- Light Green -->
+    <color name="category_social">#FFD699</color> <!-- Light Orange -->
+    <color name="category_health">#FFB3B0</color> <!-- Light Red -->
+    <color name="category_other">#C7C7CC</color> <!-- Light Gray -->
 
     <color name="light_red_bg">#FFE5E5</color>
     <color name="light_orange_bg">#FFF5E5</color>
