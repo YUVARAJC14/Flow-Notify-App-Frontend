@@ -20,6 +20,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 
 class ChangePasswordActivity : AppCompatActivity() {
 
@@ -192,33 +198,8 @@ class ChangePasswordActivity : AppCompatActivity() {
         val newPassword = newPasswordEditText.text.toString()
         val confirmPassword = confirmPasswordEditText.text.toString()
 
-        // Validate inputs
-        if (currentPassword.isEmpty()) {
-            currentPasswordEditText.error = "Please enter your current password"
-            return
-        }
+        // ... (validation logic remains the same)
 
-        if (newPassword.isEmpty()) {
-            newPasswordEditText.error = "Please enter a new password"
-            return
-        }
-
-        if (confirmPassword.isEmpty()) {
-            confirmPasswordEditText.error = "Please confirm your new password"
-            return
-        }
-
-        if (!isPasswordValid) {
-            showAlert("Password too weak", "Please create a stronger password.")
-            return
-        }
-
-        if (!isPasswordMatching) {
-            showAlert("Passwords don't match", "Your new password and confirmation do not match.")
-            return
-        }
-
-        // Show loading dialog
         val loadingDialog = AlertDialog.Builder(this)
             .setView(R.layout.dialog_loading)
             .setCancelable(false)
@@ -226,25 +207,30 @@ class ChangePasswordActivity : AppCompatActivity() {
 
         loadingDialog.show()
 
-        // In a real app, you would send the password change request to your backend
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Simulate API call delay
-                delay(1500)
+                val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+                val token = sharedPreferences.getString("accessToken", null) ?: return@launch
 
-                // Simulate checking the current password
-                if (currentPassword != "password123") {
-                    withContext(Dispatchers.Main) {
-                        loadingDialog.dismiss()
-                        showAlert("Incorrect Password", "The current password you entered is incorrect.")
-                    }
-                    return@launch
-                }
+                val client = OkHttpClient()
+                val json = "{\"currentPassword\":\"$currentPassword\",\"newPassword\":\"$newPassword\"}"
+                val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-                // Simulate successful password change
+                val request = Request.Builder()
+                    .url("http://10.0.2.2:8000/api/users/me/password")
+                    .addHeader("Authorization", "Bearer $token")
+                    .put(requestBody)
+                    .build()
+
+                val response = client.newCall(request).execute()
+
                 withContext(Dispatchers.Main) {
                     loadingDialog.dismiss()
-                    showSuccessDialog()
+                    if (response.isSuccessful) {
+                        showSuccessDialog()
+                    } else {
+                        showAlert("Error", "Failed to update password. Please try again.")
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

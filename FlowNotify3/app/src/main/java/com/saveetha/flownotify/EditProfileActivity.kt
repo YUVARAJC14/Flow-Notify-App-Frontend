@@ -24,11 +24,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 class EditProfileActivity : AppCompatActivity() {
 
@@ -304,12 +309,6 @@ class EditProfileActivity : AppCompatActivity() {
             return
         }
 
-        if (emailEditText.text.isNullOrBlank() || !isValidEmail(emailEditText.text.toString())) {
-            emailEditText.error = "Please enter a valid email address"
-            return
-        }
-
-        // Show progress
         val loadingDialog = AlertDialog.Builder(this)
             .setView(R.layout.dialog_loading)
             .setCancelable(false)
@@ -317,61 +316,41 @@ class EditProfileActivity : AppCompatActivity() {
 
         loadingDialog.show()
 
-        // In a real app, you would send the updated data to your backend
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Simulate API call delay
-                kotlinx.coroutines.delay(1500)
+                val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+                val token = sharedPreferences.getString("accessToken", null) ?: return@launch
 
-                // Create updated profile data
-                val updatedProfile = ProfileData(
-                    name = fullNameEditText.text.toString(),
-                    email = emailEditText.text.toString(),
-                    location = locationEditText.text.toString(),
-                    company = companyEditText.text.toString(),
-                    bio = bioEditText.text.toString()
-                )
+                val client = OkHttpClient()
+                val json = "{\"name\":\"${fullNameEditText.text}\"}"
+                val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-                // Handle profile image if changed
-                if (selectedImageUri != null) {
-                    // In a real app, you would upload the image here
-                    // and get back a URL to the uploaded image
-                    updatedProfile.profileImageUrl = selectedImageUri.toString()
-                } else {
-                    updatedProfile.profileImageUrl = originalProfileData.profileImageUrl
-                }
+                val request = Request.Builder()
+                    .url("http://10.0.2.2:8000/api/users/me/profile")
+                    .addHeader("Authorization", "Bearer $token")
+                    .patch(requestBody)
+                    .build()
+
+                val response = client.newCall(request).execute()
 
                 withContext(Dispatchers.Main) {
                     loadingDialog.dismiss()
-
-                    // Return updated data to the previous activity
-                    val resultIntent = Intent().apply {
-                        putExtra("updatedName", updatedProfile.name)
-                        putExtra("updatedEmail", updatedProfile.email)
-                        putExtra("updatedLocation", updatedProfile.location)
-                        putExtra("updatedCompany", updatedProfile.company)
-                        putExtra("updatedBio", updatedProfile.bio)
-                        putExtra("updatedProfileImageUrl", updatedProfile.profileImageUrl)
+                    if (response.isSuccessful) {
+                        val resultIntent = Intent().apply {
+                            putExtra("updatedName", fullNameEditText.text.toString())
+                        }
+                        setResult(Activity.RESULT_OK, resultIntent)
+                        finish()
+                        Toast.makeText(this@EditProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@EditProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
                     }
-
-                    setResult(Activity.RESULT_OK, resultIntent)
-                    finish()
-
-                    Toast.makeText(
-                        this@EditProfileActivity,
-                        "Profile updated successfully",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
                     loadingDialog.dismiss()
-                    Toast.makeText(
-                        this@EditProfileActivity,
-                        "Failed to update profile",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this@EditProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
                 }
             }
         }

@@ -16,8 +16,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class ProfileActivity : AppCompatActivity() {
@@ -152,16 +154,20 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun fetchUserData() {
-        // In a real app, this would come from your authentication system
-        // For this example, we'll use the GitHub API to get some basic user data
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Use the logged-in GitHub user from the function call
-                userName = "YUVARAJC14" // This should be fetched from your auth system
+                val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+                val token = sharedPreferences.getString("accessToken", null)
+
+                if (token == null) {
+                    // Handle missing token, e.g., redirect to login
+                    return@launch
+                }
 
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://api.github.com/users/$userName")
+                    .url("http://10.0.2.2:8000/api/users/me")
+                    .addHeader("Authorization", "Bearer $token")
                     .build()
 
                 val response = client.newCall(request).execute()
@@ -170,16 +176,12 @@ class ProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful && jsonData != null) {
                     val json = JSONObject(jsonData)
 
-                    // Extract user information
-                    val name = json.optString("name", userName)
-                    val email = json.optString("email", "$userName@example.com")
-                    val avatarUrl = json.optString("avatar_url", "")
-                    val location = json.optString("location", "")
+                    val name = json.getString("name")
+                    val email = json.getString("email")
+                    val avatarUrl = json.optString("profilePictureUrl", "")
 
-                    // Update class variables
-                    this@ProfileActivity.userName = if (name.isNotEmpty()) name else userName
+                    this@ProfileActivity.userName = name
                     this@ProfileActivity.userEmail = email
-                    this@ProfileActivity.userLocation = location
                     this@ProfileActivity.profileImageUrl = avatarUrl
 
                     withContext(Dispatchers.Main) {
@@ -188,8 +190,6 @@ class ProfileActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-
-                // Use fallback data
                 withContext(Dispatchers.Main) {
                     updateUIWithFallbackData()
                 }
@@ -231,10 +231,30 @@ class ProfileActivity : AppCompatActivity() {
                 selectedLanguage = which
             }
             .setPositiveButton("OK") { _, _ ->
-                // Save selected language
                 val language = languages[selectedLanguage]
                 findViewById<TextView>(R.id.tv_language_value).text = language
-                // In a real app, you would also update the app's locale
+                
+                // Save selected language to backend
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+                        val token = sharedPreferences.getString("accessToken", null) ?: return@launch
+
+                        val client = OkHttpClient()
+                        val json = "{\"language\":\"${language.substring(0, 2).toLowerCase()}\"}"
+                        val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+                        val request = Request.Builder()
+                            .url("http://10.0.2.2:8000/api/users/me/settings")
+                            .addHeader("Authorization", "Bearer $token")
+                            .patch(requestBody)
+                            .build()
+
+                        client.newCall(request).execute()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -247,11 +267,27 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun applyTheme(isDarkTheme: Boolean) {
-        // In a real app, you would apply the theme change here
-        // For example:
-        // AppCompatDelegate.setDefaultNightMode(
-        //     if (isDarkTheme) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-        // )
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+                val token = sharedPreferences.getString("accessToken", null) ?: return@launch
+
+                val client = OkHttpClient()
+                val theme = if (isDarkTheme) "dark" else "light"
+                val json = "{\"theme\":\"$theme\"}"
+                val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+                val request = Request.Builder()
+                    .url("http://10.0.2.2:8000/api/users/me/settings")
+                    .addHeader("Authorization", "Bearer $token")
+                    .patch(requestBody)
+                    .build()
+
+                client.newCall(request).execute()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun openWebPage(url: String) {
@@ -273,16 +309,35 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
-        // Clear authentication tokens and user data
-        val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
-        sharedPreferences.edit().clear().commit()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+                val refreshToken = sharedPreferences.getString("refreshToken", null) ?: return@launch
 
-        // Navigate to login screen
-        val intent = Intent(this, LoginActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                val client = OkHttpClient()
+                val json = "{\"refreshToken\":\"$refreshToken\"}"
+                val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+                val request = Request.Builder()
+                    .url("http://10.0.2.2:8000/api/auth/logout")
+                    .post(requestBody)
+                    .build()
+
+                client.newCall(request).execute()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Clear local preferences and navigate to login
+            val sharedPreferences = getSharedPreferences("FlowNotifyPrefs", MODE_PRIVATE)
+            sharedPreferences.edit().clear().apply()
+
+            val intent = Intent(this@ProfileActivity, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
         }
-        startActivity(intent)
-        finish()
     }
 
     override fun onResume() {
