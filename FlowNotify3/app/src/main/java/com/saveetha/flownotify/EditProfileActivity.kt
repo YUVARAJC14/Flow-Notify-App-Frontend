@@ -326,7 +326,7 @@ class EditProfileActivity : AppCompatActivity() {
                 val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
                 val request = Request.Builder()
-                    .url("http://10.0.2.2:8000/api/users/me/profile")
+                    .url("http://localhost:8000/api/users/me/profile")
                     .addHeader("Authorization", "Bearer $token")
                     .patch(requestBody)
                     .build()

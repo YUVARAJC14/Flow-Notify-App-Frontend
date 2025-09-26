@@ -145,8 +145,8 @@ class HomeActivity : AppCompatActivity() {
         val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_event)
 
         title.text = event.title
-        notes.text = "No notes available for this event view."
-        date.text = event.time // Assuming time contains date info for this view
+        notes.text = event.notes ?: "No notes available."
+        date.text = event.date
         time.text = event.time
         location.text = event.location ?: "No location specified."
 

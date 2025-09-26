@@ -216,8 +216,8 @@ class MyTasksActivity : AppCompatActivity() {
 
         title.text = task.title
         description.text = task.description ?: "No description available."
-        dueDate.text = task.dueDate
-        dueTime.text = task.time
+        dueDate.text = task.dueDate ?: "No date specified"
+        dueTime.text = task.time ?: "No time specified"
         priority.text = task.priority.replaceFirstChar { it.uppercase() } + " Priority"
 
         completeButton.setOnClickListener {

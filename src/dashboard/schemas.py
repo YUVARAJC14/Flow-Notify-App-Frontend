@@ -10,6 +10,8 @@ class UpcomingTask(BaseModel):
     title: str
     time: str
     priority: str
+    description: str
+    dueDate: str
 
 class ScheduleEvent(BaseModel):
     id: str
@@ -17,6 +19,8 @@ class ScheduleEvent(BaseModel):
     time: str
     location: str
     category: str
+    notes: Optional[str] = None
+    date: str
 
 class DashboardSummaryResponse(BaseModel):
     todaysFlow: TodaysFlow

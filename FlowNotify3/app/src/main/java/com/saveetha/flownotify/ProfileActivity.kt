@@ -166,7 +166,7 @@ class ProfileActivity : AppCompatActivity() {
 
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("http://10.0.2.2:8000/api/users/me")
+                    .url("http://localhost:8000/api/users/me")
                     .addHeader("Authorization", "Bearer $token")
                     .build()
 
@@ -245,7 +245,7 @@ class ProfileActivity : AppCompatActivity() {
                         val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
                         val request = Request.Builder()
-                            .url("http://10.0.2.2:8000/api/users/me/settings")
+                            .url("http://localhost:8000/api/users/me/settings")
                             .addHeader("Authorization", "Bearer $token")
                             .patch(requestBody)
                             .build()
@@ -278,7 +278,7 @@ class ProfileActivity : AppCompatActivity() {
                 val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
                 val request = Request.Builder()
-                    .url("http://10.0.2.2:8000/api/users/me/settings")
+                    .url("http://localhost:8000/api/users/me/settings")
                     .addHeader("Authorization", "Bearer $token")
                     .patch(requestBody)
                     .build()
@@ -319,7 +319,7 @@ class ProfileActivity : AppCompatActivity() {
                 val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
                 val request = Request.Builder()
-                    .url("http://10.0.2.2:8000/api/auth/logout")
+                    .url("http://localhost:8000/api/auth/logout")
                     .post(requestBody)
                     .build()
 

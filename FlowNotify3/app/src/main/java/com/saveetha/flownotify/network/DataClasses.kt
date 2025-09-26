@@ -101,7 +101,9 @@ data class ScheduleEvent(
     val title: String,
     val time: String,
     val location: String,
-    val category: String
+    val category: String,
+    val notes: String?,
+    val date: String
 )
 
 data class EventUpdateRequest(
@@ -111,11 +113,11 @@ data class EventUpdateRequest(
 data class Task(
     val id: String,
     val title: String,
-    val description: String?,
-    val dueDate: String,
-    val time: String,
+    @SerializedName("description") val description: String?,
+    @SerializedName("due_date") val dueDate: String?,
+    @SerializedName("due_time") val time: String?,
     val priority: String,
-    val isCompleted: Boolean
+    @SerializedName("completed") val isCompleted: Boolean
 )
 
 // Data classes for Insights
