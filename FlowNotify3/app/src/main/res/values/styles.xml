@@ -28,4 +28,18 @@
     <style name="AlertDialog.Transparent" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+
+    <!-- Custom Calendar Theme -->
+    <style name="CustomCalendarTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:dateTextAppearance">@style/CustomDateTextAppearance</item>
+        <item name="android:weekDayTextAppearance">@style/CustomWeekDayTextAppearance</item>
+    </style>
+
+    <style name="CustomDateTextAppearance" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="CustomWeekDayTextAppearance" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/black</item>
+    </style>
 </resources>

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CalendarView
 import android.widget.TextView
 import android.widget.Toast
@@ -176,7 +177,9 @@ class CalendarActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
-            holder.bind(events[position])
+            val event = events[position]
+            holder.bind(event)
+            holder.itemView.setOnClickListener { showEventDetailsDialog(event) }
         }
 
         override fun getItemCount(): Int = events.size
@@ -206,6 +209,75 @@ class CalendarActivity : AppCompatActivity() {
                     else -> R.color.light_gray_bg
                 }
                 container.setBackgroundResource(backgroundColor)
+            }
+        }
+    }
+
+    private fun showEventDetailsDialog(event: Event) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
+            .setView(dialogView)
+            .create()
+
+        dialog.show()
+
+        val window = dialog.window
+        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
+
+        val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
+        val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)
+        val date = dialogView.findViewById<TextView>(R.id.tv_event_details_date)
+        val time = dialogView.findViewById<TextView>(R.id.tv_event_details_time)
+        val location = dialogView.findViewById<TextView>(R.id.tv_event_details_location)
+        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_event)
+        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_event)
+
+        title.text = event.title
+        notes.text = event.notes ?: "No notes available."
+        date.text = event.date
+        time.text = "${event.startTime} - ${event.endTime}"
+        location.text = event.location ?: "No location specified."
+
+        completeButton.setOnClickListener {
+            markEventAsComplete(event.id)
+            dialog.dismiss()
+        }
+
+        deleteButton.setOnClickListener {
+            deleteEvent(event.id)
+            dialog.dismiss()
+        }
+    }
+
+    private fun markEventAsComplete(eventId: Int) {
+        lifecycleScope.launch {
+            try {
+                val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
+                val response = apiService.updateEvent(eventId, request)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@CalendarActivity, "Event marked as complete", Toast.LENGTH_SHORT).show()
+                    fetchEventsForDate(Calendar.getInstance()) // Refresh data for the current day
+                } else {
+                    Toast.makeText(this@CalendarActivity, "Failed to update event: ${response.errorBody()?.string()}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@CalendarActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun deleteEvent(eventId: Int) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.deleteEvent(eventId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@CalendarActivity, "Event deleted", Toast.LENGTH_SHORT).show()
+                    fetchEventsForDate(Calendar.getInstance()) // Refresh data for the current day
+                } else {
+                    Toast.makeText(this@CalendarActivity, "Failed to delete event: ${response.errorBody()?.string()}", Toast.LENGTH_LONG).show()
+                } 
+            } catch (e: Exception) {
+                Toast.makeText(this@CalendarActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
