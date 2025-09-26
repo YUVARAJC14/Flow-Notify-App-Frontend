@@ -142,22 +142,30 @@ class MyTasksActivity : AppCompatActivity() {
                     val tasksMap = response.body()
                     val displayList = mutableListOf<Any>()
 
-                    tasksMap?.get("today")?.let {
-                        if (it.isNotEmpty()) {
-                            displayList.add("Today")
-                            displayList.addAll(it)
+                    if (filter == "completed") {
+                        tasksMap?.get("completed")?.let {
+                            if (it.isNotEmpty()) {
+                                displayList.addAll(it)
+                            }
                         }
-                    }
-                    tasksMap?.get("tomorrow")?.let {
-                        if (it.isNotEmpty()) {
-                            displayList.add("Tomorrow")
-                            displayList.addAll(it)
+                    } else {
+                        tasksMap?.get("today")?.let {
+                            if (it.isNotEmpty()) {
+                                displayList.add("Today")
+                                displayList.addAll(it)
+                            }
                         }
-                    }
-                    tasksMap?.get("nextWeek")?.let {
-                        if (it.isNotEmpty()) {
-                            displayList.add("Next Week")
-                            displayList.addAll(it)
+                        tasksMap?.get("tomorrow")?.let {
+                            if (it.isNotEmpty()) {
+                                displayList.add("Tomorrow")
+                                displayList.addAll(it)
+                            }
+                        }
+                        tasksMap?.get("upcoming")?.let {
+                            if (it.isNotEmpty()) {
+                                displayList.add("Upcoming")
+                                displayList.addAll(it)
+                            }
                         }
                     }
 

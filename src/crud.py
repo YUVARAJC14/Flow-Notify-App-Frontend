@@ -92,28 +92,36 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
     if parent_id is not None:
         query = query.filter(task_models.Task.parent_id == parent_id)
     else:
-        query = query.filter(task_models.Task.parent_id == None)
+        query = query.filter(task_models.Task.parent_id.is_(None))
 
     if search:
         query = query.filter(task_models.Task.title.contains(search) | task_models.Task.description.contains(search))
 
     today = date.today()
-
-    if date_filter == "today":
-        query = query.filter(task_models.Task.due_date == today)
-    elif date_filter == "upcoming":
-        query = query.filter(task_models.Task.due_date > today, task_models.Task.completed == False)
-    elif date_filter == "completed":
-        query = query.filter(task_models.Task.completed == True)
-
-    tasks = query.order_by(task_models.Task.due_date).all()
-    
-    today = date.today()
     tomorrow = today + timedelta(days=1)
+    day_after_tomorrow = today + timedelta(days=2)
 
+    if date_filter == "completed":
+        completed_tasks = query.filter(task_models.Task.completed == True).order_by(task_models.Task.completed_at.desc()).all()
+        return {"completed": completed_tasks}
+
+    # For other views, only show non-completed tasks
+    query = query.filter(task_models.Task.completed == False)
+    
+    if date_filter == "today":
+        tasks = query.filter(task_models.Task.due_date == today).order_by(task_models.Task.due_time).all()
+        return {"today": tasks, "tomorrow": [], "upcoming": []}
+    
+    if date_filter == "upcoming":
+        tasks = query.filter(task_models.Task.due_date >= day_after_tomorrow).order_by(task_models.Task.due_date, task_models.Task.due_time).all()
+        return {"today": [], "tomorrow": [], "upcoming": tasks}
+
+    # Default "all" filter logic
+    tasks = query.order_by(task_models.Task.due_date, task_models.Task.due_time).all()
+    
     today_tasks = [task for task in tasks if task.due_date == today]
     tomorrow_tasks = [task for task in tasks if task.due_date == tomorrow]
-    upcoming_tasks = [task for task in tasks if task.due_date > tomorrow]
+    upcoming_tasks = [task for task in tasks if task.due_date >= day_after_tomorrow]
 
     return {"today": today_tasks, "tomorrow": tomorrow_tasks, "upcoming": upcoming_tasks}
 
