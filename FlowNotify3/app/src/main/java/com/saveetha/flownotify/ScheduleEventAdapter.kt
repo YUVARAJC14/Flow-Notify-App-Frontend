@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.saveetha.flownotify.network.ScheduleEvent
@@ -14,8 +15,6 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>, private val 
         val title: TextView = itemView.findViewById(R.id.event_title)
         val location: TextView = itemView.findViewById(R.id.event_location)
         val time: TextView = itemView.findViewById(R.id.event_time)
-        val categoryIndicator: View = itemView.findViewById(R.id.category_indicator)
-        val category: TextView = itemView.findViewById(R.id.event_category)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
@@ -28,17 +27,25 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>, private val 
         holder.title.text = event.title
         holder.location.text = event.location
         holder.time.text = "${event.time} - ${event.endTime}"
-        holder.category.text = event.category
 
-        val categoryColor = when (event.category.lowercase()) {
+        val context = holder.itemView.context
+        val cardView = holder.itemView as CardView
+
+        val backgroundColorRes = when (event.category.lowercase()) {
             "work" -> R.color.category_work
             "personal" -> R.color.category_personal
             "social" -> R.color.category_social
             "health" -> R.color.category_health
-            else -> R.color.light_gray_bg
+            "other" -> R.color.category_other
+            else -> R.color.white
         }
-        holder.categoryIndicator.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, categoryColor))
-        
+
+        cardView.setCardBackgroundColor(ContextCompat.getColor(context, backgroundColorRes))
+
+        holder.title.setTextColor(ContextCompat.getColor(context, R.color.black))
+        holder.time.setTextColor(ContextCompat.getColor(context, R.color.black))
+        holder.location.setTextColor(ContextCompat.getColor(context, R.color.black))
+
         holder.itemView.setOnClickListener { onEventClick(event) }
     }
 
