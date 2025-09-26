@@ -24,6 +24,8 @@ import java.util.Calendar
 import java.util.Locale
 import okhttp3.OkHttpClient
 import com.saveetha.flownotify.network.AuthInterceptor
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 class NewTaskActivity : AppCompatActivity() {
 
@@ -59,6 +61,13 @@ class NewTaskActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_task)
+
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(view.paddingLeft, systemBars.top, view.paddingRight, view.paddingBottom)
+            insets
+        }
 
         // Initialize UI components
         initViews()

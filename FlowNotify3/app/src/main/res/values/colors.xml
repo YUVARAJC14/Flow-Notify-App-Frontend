@@ -15,4 +15,9 @@
     <color name="yellow_dark">#ffc107</color>
     <color name="red_dark">#dc3545</color>
     <color name="primary_blue">#4A7BF7</color>
+    <color name="light_blue_bg">#E6F0FF</color>
+    <color name="light_purple_bg">#F2E6FF</color>
+    <color name="light_green_bg">#E6FFEB</color>
+    <color name="light_pink_bg">#FFEBEE</color>
+    <color name="light_gray_bg">#F5F5F5</color>
 </resources>

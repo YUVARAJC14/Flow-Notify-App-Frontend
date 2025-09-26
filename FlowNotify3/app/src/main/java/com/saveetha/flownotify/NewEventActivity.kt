@@ -30,7 +30,40 @@ import androidx.core.view.WindowInsetsCompat
 
 class NewEventActivity : AppCompatActivity() {
 
-    // ... (existing properties)
+    private lateinit var eventTitleEditText: EditText
+    private lateinit var locationEditText: EditText
+    private lateinit var selectedDateTextView: TextView
+    private lateinit var startTimeTextView: TextView
+    private lateinit var endTimeTextView: TextView
+    private lateinit var notesEditText: EditText
+    private lateinit var reminderTextView: TextView
+
+    // Category selection
+    private lateinit var categoryWork: TextView
+    private lateinit var categoryPersonal: TextView
+    private lateinit var categoryHealth: TextView
+    private lateinit var categorySocial: TextView
+    private var selectedCategory: String = "Work"
+
+    // Date & Time
+    private val calendar: Calendar = Calendar.getInstance()
+    private var startTimeHour: Int = 10
+    private var startTimeMinute: Int = 0
+    private var endTimeHour: Int = 11
+    private var endTimeMinute: Int = 0
+
+    private val apiService: ApiService by lazy {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(this))
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl("http://localhost:8000/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

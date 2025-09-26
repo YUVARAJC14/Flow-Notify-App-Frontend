@@ -21,6 +21,7 @@ class ScheduleEvent(BaseModel):
     category: str
     notes: Optional[str] = None
     date: str
+    date: str
 
 class DashboardSummaryResponse(BaseModel):
     todaysFlow: TodaysFlow

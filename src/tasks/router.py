@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Dict
 from .. import crud
 from src.auth import models as auth_models
 from src.tasks import models as task_models
@@ -21,7 +21,7 @@ def create_task(
 ):
     return crud.create_user_task(db=db, task=task, user_id=current_user.id)
 
-@router.get("", response_model=schemas.TaskListGrouped)
+@router.get("", response_model=Dict[str, List[schemas.Task]])
 def read_tasks(
     filter: Optional[str] = None,
     search: Optional[str] = None,
