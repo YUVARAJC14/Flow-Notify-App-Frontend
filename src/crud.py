@@ -277,13 +277,6 @@ def update_event(db: Session, event: event_models.Event, event_update: schemas_a
     for key, value in event_data.items():
         setattr(event, key, value)
 
-    # Handle completed_at timestamp for events
-    if "completed" in event_data:
-        if event_data["completed"] and event.completed_at is None:
-            event.completed_at = datetime.now()
-        elif not event_data["completed"] and event.completed_at is not None:
-            event.completed_at = None
-
     db.add(event)
     db.commit()
     db.refresh(event)

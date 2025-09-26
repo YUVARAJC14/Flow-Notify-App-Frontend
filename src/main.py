@@ -1,3 +1,7 @@
+import bcrypt
+if not hasattr(bcrypt, '__about__'):
+    bcrypt.__about__ = bcrypt
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.responses import JSONResponse
@@ -8,6 +12,7 @@ from src.tasks.router import router as tasks_router
 from src.dashboard.router import router as dashboard_router
 from src.events.router import router as events_router
 from src.insights.router import router as insights_router
+from src.feedback.router import router as feedback_router # New import
 
 from .security import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,6 +52,7 @@ def create_app():
     api_router.include_router(dashboard_router)
     api_router.include_router(events_router)
     api_router.include_router(insights_router)
+    api_router.include_router(feedback_router) # Include new feedback router
 
     app.include_router(auth_router_container)
     app.include_router(api_router)

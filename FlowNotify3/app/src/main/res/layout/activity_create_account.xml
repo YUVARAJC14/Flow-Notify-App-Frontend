@@ -77,7 +77,8 @@
             android:background="@drawable/edittext_background"
             android:hint="Enter your full name"
             android:inputType="textPersonName"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="@color/black" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -112,7 +113,8 @@
             android:background="@drawable/edittext_background"
             android:hint="Enter your email"
             android:inputType="textEmailAddress"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="@color/black" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -148,7 +150,8 @@
             android:background="@drawable/edittext_background"
             android:hint="Enter your password"
             android:inputType="textPassword"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="@color/black" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -194,7 +197,8 @@
             android:background="@drawable/edittext_background"
             android:hint="Confirm your password"
             android:inputType="textPassword"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="@color/black" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -220,7 +224,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:text="I agree to the Terms of Service and Privacy Policy"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textColor="@color/black" />
 
     </LinearLayout>
 

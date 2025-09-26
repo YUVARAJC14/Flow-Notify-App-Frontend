@@ -39,12 +39,12 @@ def change_password(
 
 
 @router.patch("/me/profile", response_model=schemas_all.UserResponse)
-def update_user_name(
-    name_update: schemas_all.UserNameUpdate,
+def update_user_profile(
+    profile_update: schemas_all.UserProfileUpdate,
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
-    return crud.update_user_name(db, current_user, name_update.name)
+    return crud.update_user_profile(db, current_user, profile_update)
 
 @router.patch("/me/settings", response_model=schemas_all.UserResponse)
 def update_user_settings(
@@ -53,3 +53,11 @@ def update_user_settings(
     current_user: auth_models.User = Depends(get_current_user)
 ):
     return crud.update_user_settings(db, current_user, settings_update)
+
+@router.patch("/me/notification-settings", response_model=schemas_all.UserResponse)
+def update_notification_settings(
+    notification_update: schemas_all.NotificationSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: auth_models.User = Depends(get_current_user)
+):
+    return crud.update_notification_settings(db, current_user, notification_update)

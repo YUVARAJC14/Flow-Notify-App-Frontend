@@ -309,9 +309,14 @@ class CalendarActivity : AppCompatActivity() {
 
     private fun showEventDetailsDialog(event: Event) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
             .setView(dialogView)
             .create()
+
+        dialog.show()
+
+        val window = dialog.window
+        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
 
         val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
         val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)

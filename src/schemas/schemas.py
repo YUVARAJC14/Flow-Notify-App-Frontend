@@ -253,3 +253,6 @@ class Notification(BaseModel):
 class NotificationTimingSuggestion(BaseModel):
     suggested_time: datetime
     reason: str
+
+class RefreshTokenRequest(BaseModel):
+    refreshToken: str

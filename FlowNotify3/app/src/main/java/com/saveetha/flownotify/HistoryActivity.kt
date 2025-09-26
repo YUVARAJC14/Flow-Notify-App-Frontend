@@ -43,7 +43,7 @@ class HistoryActivity : AppCompatActivity() {
         backButton = findViewById(R.id.btn_back)
         
         recyclerView.layoutManager = LinearLayoutManager(this)
-        historyTaskAdapter = TaskAdapter(emptyList<Task>()) { task ->
+        historyTaskAdapter = TaskAdapter(emptyList<Any>()) { task ->
             showTaskDetailsDialog(task)
         }
         recyclerView.adapter = historyTaskAdapter
@@ -66,7 +66,7 @@ class HistoryActivity : AppCompatActivity() {
                     }
                     else {
                         showEmptyState(false)
-                        historyTaskAdapter.updateData(tasks)
+                        historyTaskAdapter.updateData(tasks as List<Any>)
                     }
                 } else {
                     showError("Failed to load history")
@@ -95,9 +95,14 @@ class HistoryActivity : AppCompatActivity() {
 
     private fun showTaskDetailsDialog(task: Task) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
             .setView(dialogView)
             .create()
+
+        dialog.show()
+
+        val window = dialog.window
+        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
 
         val title = dialogView.findViewById<TextView>(R.id.tv_task_details_title)
         val description = dialogView.findViewById<TextView>(R.id.tv_task_details_description)

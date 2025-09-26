@@ -33,6 +33,20 @@ def verify_token(token: str, credentials_exception):
     except JWTError:
         raise credentials_exception
 
+def get_jti_from_token(token: str) -> str:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        jti: str = payload.get("jti")
+        if jti is None:
+            raise JWTError("JTI not found in token")
+        return jti
+    except JWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {e}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

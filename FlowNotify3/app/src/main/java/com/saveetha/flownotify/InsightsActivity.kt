@@ -33,7 +33,8 @@ class InsightsActivity : AppCompatActivity() {
     private lateinit var filterMonth: TextView
     private lateinit var filterYear: TextView
     private lateinit var flowScoreTextView: TextView
-    private lateinit var flowScoreComparisonTextView: TextView
+    private lateinit var flowScoreMessageTextView: TextView
+    private lateinit var flowPieChart: PieChartView
 
     private val apiService: ApiService by lazy {
         ApiClient.getInstance(this)
@@ -57,7 +58,8 @@ class InsightsActivity : AppCompatActivity() {
         filterMonth = findViewById(R.id.filter_month)
         filterYear = findViewById(R.id.filter_year)
         flowScoreTextView = findViewById(R.id.tv_flow_score)
-        flowScoreComparisonTextView = findViewById(R.id.tv_flow_score_comparison)
+        flowScoreMessageTextView = findViewById(R.id.tv_flow_score_message)
+        flowPieChart = findViewById(R.id.pie_chart_flow)
     }
 
     private fun setupBottomNavigation() {
@@ -131,7 +133,15 @@ class InsightsActivity : AppCompatActivity() {
                     val insights = response.body()
                     insights?.let {
                         flowScoreTextView.text = "${it.flowScore.score}%"
-                        flowScoreComparisonTextView.text = "${it.flowScore.comparison.change}% ${it.flowScore.comparison.period}"
+                        flowPieChart.setPercentage(it.flowScore.score.toFloat())
+
+                        flowScoreMessageTextView.text = when {
+                            it.flowScore.score >= 80 -> "Excellent flow! Keep up the great work."
+                            it.flowScore.score >= 60 -> "Good flow! You're on track."
+                            it.flowScore.score >= 40 -> "Steady progress. Aim for higher flow."
+                            else -> "Let's boost your flow! Focus on key tasks."
+                        }
+
                         setupBarChart(it.taskCompletion)
                         setupHeatmap(it.productiveTimes)
                     }
@@ -186,6 +196,17 @@ class InsightsActivity : AppCompatActivity() {
         leftAxis.gridColor = Color.parseColor("#E0E0E0")
         leftAxis.setDrawAxisLine(true)
         leftAxis.axisMinimum = 0f
+        leftAxis.setLabelCount(5, true) // Show 5 labels, force integers
+        leftAxis.axisLineColor = Color.parseColor("#E0E0E0")
+        leftAxis.textColor = Color.parseColor("#757575")
+        leftAxis.textSize = 10f
+        leftAxis.axisMaximum = (taskCompletion.maxOfOrNull { it.total }?.toFloat() ?: 10f) * 1.2f // Dynamic max
+        leftAxis.setDrawLabels(true)
+        leftAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return value.toInt().toString()
+            }
+        }
 
         val rightAxis = barChart.axisRight
         rightAxis.isEnabled = false
@@ -197,11 +218,38 @@ class InsightsActivity : AppCompatActivity() {
 
     private fun setupHeatmap(productiveTimes: List<com.saveetha.flownotify.network.ProductiveTime>) {
         heatmapContainer.removeAllViews()
-        // Time slots (24-hour format)
-        val timeSlots = listOf("9", "12", "15", "18", "21")
+
+        val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        val timeSlots = listOf(9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21) // Example hours
+
+        // Create header row for days of the week
+        val headerRow = LinearLayout(this)
+        headerRow.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        headerRow.orientation = LinearLayout.HORIZONTAL
+
+        // Empty corner for time labels
+        val cornerView = View(this)
+        cornerView.layoutParams = LinearLayout.LayoutParams(48, ViewGroup.LayoutParams.WRAP_CONTENT)
+        headerRow.addView(cornerView)
+
+        for (day in daysOfWeek) {
+            val dayLabel = TextView(this)
+            dayLabel.layoutParams = LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+            )
+            dayLabel.gravity = Gravity.CENTER
+            dayLabel.text = day
+            dayLabel.textSize = 12f
+            dayLabel.setTextColor(Color.parseColor("#9E9E9E"))
+            headerRow.addView(dayLabel)
+        }
+        heatmapContainer.addView(headerRow)
 
         // Create rows for each time slot
-        for (timeIndex in timeSlots.indices) {
+        for (timeHour in timeSlots) {
             val row = LinearLayout(this)
             row.layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -217,13 +265,13 @@ class InsightsActivity : AppCompatActivity() {
             )
             timeLabel.gravity = Gravity.CENTER_VERTICAL or Gravity.END
             timeLabel.setPadding(0, 0, 8, 0)
-            timeLabel.text = timeSlots[timeIndex]
+            timeLabel.text = if (timeHour < 12) "${timeHour} AM" else if (timeHour == 12) "12 PM" else "${timeHour - 12} PM"
             timeLabel.textSize = 12f
             timeLabel.setTextColor(Color.parseColor("#9E9E9E"))
             row.addView(timeLabel)
 
             // Add cells for each day
-            for (dayIndex in 0..6) {
+            for (dayIndex in 0..6) { // 0=Monday, 1=Tuesday, ..., 6=Sunday
                 val cell = View(this)
                 val cellParams = LinearLayout.LayoutParams(
                     0, // Width (will be weighted)
@@ -233,13 +281,13 @@ class InsightsActivity : AppCompatActivity() {
                 cellParams.setMargins(4, 4, 4, 4)
                 cell.layoutParams = cellParams
 
-                val intensity = productiveTimes.find { it.day == dayIndex && it.hour == timeSlots[timeIndex].toInt() }?.intensity ?: 0f
+                val intensity = productiveTimes.find { it.day == dayIndex && it.hour == timeHour }?.intensity ?: 0f
 
                 // Set background color based on productivity level
                 val backgroundColor = when {
-                    intensity > 0.7 -> Color.parseColor("#2196F3") // High
-                    intensity > 0.4 -> Color.parseColor("#64B5F6") // Medium
-                    intensity > 0 -> Color.parseColor("#BBDEFB") // Low
+                    intensity > 0.7 -> ContextCompat.getColor(this, R.color.blue) // High
+                    intensity > 0.4 -> ContextCompat.getColor(this, R.color.primary_blue) // Medium
+                    intensity > 0 -> ContextCompat.getColor(this, R.color.gray_light) // Low
                     else -> Color.parseColor("#F5F5F5") // No data
                 }
                 cell.setBackgroundColor(backgroundColor)

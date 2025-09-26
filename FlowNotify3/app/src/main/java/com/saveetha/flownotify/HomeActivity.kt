@@ -1,18 +1,25 @@
 package com.saveetha.flownotify
 
+import android.Manifest
+import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -25,12 +32,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 
 class HomeActivity : AppCompatActivity() {
 
@@ -46,6 +47,18 @@ class HomeActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun checkAndRequestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Intent().also { intent ->
+                    intent.action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+                    startActivity(intent)
+                }
             }
         }
     }
@@ -79,6 +92,7 @@ class HomeActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupListeners()
         askNotificationPermission() // Call permission request
+        checkAndRequestExactAlarmPermission()
 
         loadInitialData()
     }
@@ -113,9 +127,14 @@ class HomeActivity : AppCompatActivity() {
 
     private fun showEventDetailsDialog(event: ScheduleEvent) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
             .setView(dialogView)
             .create()
+
+        dialog.show()
+
+        val window = dialog.window
+        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
 
         val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
         val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)
@@ -325,9 +344,14 @@ class HomeActivity : AppCompatActivity() {
 
     private fun showTaskDetailsDialog(task: UpcomingTask) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
             .setView(dialogView)
             .create()
+
+        dialog.show()
+
+        val window = dialog.window
+        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
 
         val title = dialogView.findViewById<TextView>(R.id.tv_task_details_title)
         val description = dialogView.findViewById<TextView>(R.id.tv_task_details_description)

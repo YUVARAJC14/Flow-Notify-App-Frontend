@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..schemas import schemas
 from ..database.database import get_db
-from ..security import create_access_token, create_refresh_token, get_current_user
+from ..security import create_access_token, create_refresh_token, get_current_user, get_jti_from_token
 from ..auth_utils import verify_password
 
 router = APIRouter(
@@ -73,6 +73,10 @@ def reset_password(data: schemas.ResetPasswordSchema, db: Session = Depends(get_
     return {"message": "Password has been reset successfully."}
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-def logout(current_user: schemas.UserResponse = Depends(get_current_user)):
-    # In a real app, this would invalidate the user's session or tokens.
+def logout(
+    refresh_token_request: schemas.RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
+    jti = get_jti_from_token(refresh_token_request.refreshToken)
+    crud.add_token_to_blocklist(db, jti)
     return {"message": "Logged out successfully."}

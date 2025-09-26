@@ -135,15 +135,6 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/tv_flow_score_trend"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="12% higher than last week"
-                        android:textColor="#4CAF50"
-                        android:textSize="14sp" />
-
-                    <TextView
                         android:id="@+id/tv_flow_score"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -153,12 +144,14 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/tv_flow_score_comparison"
+                        android:id="@+id/tv_flow_score_message"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:textColor="#4CAF50"
-                        android:textSize="14sp" />
+                        android:layout_marginTop="4dp"
+                        android:textColor="#757575"
+                        android:textSize="14sp"
+                        tools:text="You're doing great! Keep it up." />
 
                     <FrameLayout
                         android:layout_width="match_parent"
@@ -172,9 +165,11 @@
                             android:layout_height="120dp"
                             android:layout_gravity="center">
 
-                            <!-- Placeholder for the circular progress bar -->
-                            <include layout="@layout/circular_progress_82" />
-                        </FrameLayout>
+                                                    <com.saveetha.flownotify.PieChartView
+                                                        android:id="@+id/pie_chart_flow"
+                                                        android:layout_width="120dp"
+                                                        android:layout_height="120dp"
+                                                        android:layout_gravity="center" />                        </FrameLayout>
                     </FrameLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
