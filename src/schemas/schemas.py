@@ -194,6 +194,7 @@ class EventResponse(BaseModel):
     endTime: str
     location: Optional[str] = None
     category: str
+    notes: Optional[str] = None
 
 class GoalStatusEnum(str, Enum):
     not_started = "Not Started"

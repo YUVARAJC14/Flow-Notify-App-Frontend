@@ -31,6 +31,8 @@
 
     <!-- Custom Calendar Theme -->
     <style name="CustomCalendarTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="android:colorAccent">@color/primary_blue</item> <!-- For older Android versions -->
         <item name="android:dateTextAppearance">@style/CustomDateTextAppearance</item>
         <item name="android:weekDayTextAppearance">@style/CustomWeekDayTextAppearance</item>
     </style>

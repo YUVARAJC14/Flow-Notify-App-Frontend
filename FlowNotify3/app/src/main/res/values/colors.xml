@@ -20,4 +20,6 @@
     <color name="light_green_bg">#E6FFEB</color>
     <color name="light_pink_bg">#FFEBEE</color>
     <color name="light_gray_bg">#F5F5F5</color>
+    <color name="light_red_bg">#FFEBEE</color>
+    <color name="light_orange_bg">#FFF3E0</color>
 </resources>

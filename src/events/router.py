@@ -47,20 +47,36 @@ def create_event(
         id=str(created_event.id),
         title=created_event.title,
         date=created_event.start_datetime.strftime('%Y-%m-%d'),
-        startTime=created_event.start_datetime.strftime('%H:%M'),
-        endTime=created_event.end_datetime.strftime('%H:%M'),
+        startTime=created_event.start_datetime.strftime('%I:%M %p'),
+        endTime=created_event.end_datetime.strftime('%I:%M %p'),
         location=created_event.location,
         category=created_event.category.value,
+        notes=created_event.notes
     )
 
-@router.get("", response_model=List[schemas.Event])
+@router.get("", response_model=List[schemas.EventResponse])
 def read_events(
     start_date: Optional[date] = Query(None, alias="startDate"),
     end_date: Optional[date] = Query(None, alias="endDate"),
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
-    return crud.get_events(db=db, user_id=current_user.id, start_date=start_date, end_date=end_date)
+    events_db = crud.get_events(db=db, user_id=current_user.id, start_date=start_date, end_date=end_date)
+    response_events = []
+    for event in events_db:
+        response_events.append(
+            schemas.EventResponse(
+                id=str(event.id),
+                title=event.title,
+                date=event.start_datetime.strftime('%Y-%m-%d'),
+                startTime=event.start_datetime.strftime('%I:%M %p'),
+                endTime=event.end_datetime.strftime('%I:%M %p'),
+                location=event.location,
+                category=event.category.value,
+                notes=event.notes
+            )
+        )
+    return response_events
 
 @router.put("/{event_id}", response_model=schemas.Event)
 def update_event(
