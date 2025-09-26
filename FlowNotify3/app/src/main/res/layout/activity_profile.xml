@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8F8F8"
+    android:fitsSystemWindows="true"
     tools:context=".ProfileActivity">
 
     <androidx.core.widget.NestedScrollView
@@ -31,8 +32,8 @@
 
                 <ImageView
                     android:id="@+id/iv_logo"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:contentDescription="@string/app_logo"
                     android:src="@drawable/flow_notify_logo" />
 
