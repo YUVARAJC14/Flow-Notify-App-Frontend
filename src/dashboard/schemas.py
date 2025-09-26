@@ -12,15 +12,16 @@ class UpcomingTask(BaseModel):
     priority: str
     description: str
     dueDate: str
+    completed: bool
 
 class ScheduleEvent(BaseModel):
     id: str
     title: str
     time: str
+    endTime: str
     location: str
     category: str
     notes: Optional[str] = None
-    date: str
     date: str
 
 class DashboardSummaryResponse(BaseModel):

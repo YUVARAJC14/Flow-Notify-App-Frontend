@@ -20,7 +20,7 @@ class PieChartView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private val backgroundPaint = Paint().apply {
         isAntiAlias = true
         style = Paint.Style.FILL
-        color = ContextCompat.getColor(context, R.color.gray_light) // A light gray for the background
+        color = ContextCompat.getColor(context, R.color.light_gray) // A light gray for the background
     }
 
     private val rect = RectF()
@@ -44,9 +44,9 @@ class PieChartView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
         // Set color based on percentage
         val colorRes = when {
-            percentage >= 80 -> R.color.green_dark
-            percentage >= 50 -> R.color.yellow_dark
-            else -> R.color.red_dark
+            percentage >= 80 -> R.color.green
+            percentage >= 50 -> R.color.orange
+            else -> R.color.red
         }
         piePaint.color = ContextCompat.getColor(context, colorRes)
 

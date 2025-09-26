@@ -38,7 +38,8 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: auth_mode
             time=task.due_time.strftime("%I:%M %p") if task.due_time else "",
             priority=task.priority.value if task.priority else "",
             description=task.description or "",
-            dueDate=task.due_date.strftime("%Y-%m-%d") if task.due_date else ""
+            dueDate=task.due_date.strftime("%Y-%m-%d") if task.due_date else "",
+            completed=task.completed
         ) for task in upcoming_tasks_db
     ]
 
@@ -49,6 +50,7 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: auth_mode
             id=str(event.id),
             title=event.title,
             time=event.start_datetime.strftime("%I:%M %p"),
+            endTime=event.end_datetime.strftime("%I:%M %p"),
             location=event.location or "",
             category=event.category.value if event.category else "",
             notes=event.notes or "",

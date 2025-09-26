@@ -287,7 +287,7 @@ class InsightsActivity : AppCompatActivity() {
                 val backgroundColor = when {
                     intensity > 0.7 -> ContextCompat.getColor(this, R.color.blue) // High
                     intensity > 0.4 -> ContextCompat.getColor(this, R.color.primary_blue) // Medium
-                    intensity > 0 -> ContextCompat.getColor(this, R.color.gray_light) // Low
+                    intensity > 0 -> ContextCompat.getColor(this, R.color.light_gray) // Low
                     else -> Color.parseColor("#F5F5F5") // No data
                 }
                 cell.setBackgroundColor(backgroundColor)

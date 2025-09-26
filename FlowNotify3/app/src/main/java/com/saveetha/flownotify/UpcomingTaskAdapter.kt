@@ -1,5 +1,6 @@
 package com.saveetha.flownotify
 
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +14,8 @@ class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>, private val onT
     class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.tv_task_title)
         val time: TextView = itemView.findViewById(R.id.tv_task_time)
-        val dueDate: TextView = itemView.findViewById(R.id.tv_task_due_date)
-        val container: View = itemView.findViewById(R.id.task_container)
+        val priorityBar: View = itemView.findViewById(R.id.priority_bar)
+        val priorityDot: View = itemView.findViewById(R.id.priority_dot)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -26,15 +27,20 @@ class UpcomingTaskAdapter(private var tasks: List<UpcomingTask>, private val onT
         val task = tasks[position]
         holder.title.text = task.title
         holder.time.text = task.time
-        holder.dueDate.text = task.dueDate
 
-        val backgroundColor = when (task.priority.lowercase()) {
-            "high" -> R.color.light_red_bg
-            "medium" -> R.color.light_orange_bg
-            "low" -> R.color.light_green_bg
-            else -> R.color.light_gray_bg
+        val priorityColor = when (task.priority.lowercase()) {
+            "high" -> R.color.priority_high
+            "medium" -> R.color.priority_medium
+            "low" -> R.color.priority_low
+            else -> android.R.color.transparent
         }
-        holder.container.setBackgroundResource(backgroundColor)
+        
+        val color = ContextCompat.getColor(holder.itemView.context, priorityColor)
+        holder.priorityBar.setBackgroundColor(color)
+
+        val dotDrawable = ContextCompat.getDrawable(holder.itemView.context, R.drawable.circle_background)?.mutate() as GradientDrawable
+        dotDrawable.setColor(color)
+        holder.priorityDot.background = dotDrawable
 
         holder.itemView.setOnClickListener { onTaskClick(task) }
     }

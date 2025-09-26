@@ -14,7 +14,8 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>, private val 
         val title: TextView = itemView.findViewById(R.id.event_title)
         val location: TextView = itemView.findViewById(R.id.event_location)
         val time: TextView = itemView.findViewById(R.id.event_time)
-        val icon: View = itemView.findViewById(R.id.event_icon)
+        val categoryIndicator: View = itemView.findViewById(R.id.category_indicator)
+        val category: TextView = itemView.findViewById(R.id.event_category)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
@@ -26,7 +27,18 @@ class ScheduleEventAdapter(private var events: List<ScheduleEvent>, private val 
         val event = events[position]
         holder.title.text = event.title
         holder.location.text = event.location
-        holder.time.text = event.time
+        holder.time.text = "${event.time} - ${event.endTime}"
+        holder.category.text = event.category
+
+        val categoryColor = when (event.category.lowercase()) {
+            "work" -> R.color.category_work
+            "personal" -> R.color.category_personal
+            "social" -> R.color.category_social
+            "health" -> R.color.category_health
+            else -> R.color.light_gray_bg
+        }
+        holder.categoryIndicator.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, categoryColor))
+        
         holder.itemView.setOnClickListener { onEventClick(event) }
     }
 

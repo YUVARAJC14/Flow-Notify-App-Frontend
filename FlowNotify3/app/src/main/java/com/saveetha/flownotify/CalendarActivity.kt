@@ -203,11 +203,11 @@ class CalendarActivity : AppCompatActivity() {
                 locationTextView.visibility = if (event.location.isNullOrEmpty()) View.GONE else View.VISIBLE
 
                 val backgroundColor = when (event.category.lowercase()) {
-                    "work" -> R.color.light_blue_bg
-                    "personal" -> R.color.light_purple_bg
-                    "health" -> R.color.light_green_bg
-                    "social" -> R.color.light_pink_bg
-                    else -> R.color.light_gray_bg
+                    "work" -> R.color.category_work
+                    "personal" -> R.color.category_personal
+                    "health" -> R.color.category_health
+                    "social" -> R.color.category_social
+                    else -> R.color.category_other
                 }
                 container.setBackgroundResource(backgroundColor)
             }

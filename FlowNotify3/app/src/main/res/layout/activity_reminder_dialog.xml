@@ -37,8 +37,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="@color/black"
             android:text="Dismiss"
-            android:backgroundTint="@color/gray_light" />
+            android:backgroundTint="@color/light_gray" />
 
         <Button
             android:id="@+id/btn_mark_complete"
