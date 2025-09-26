@@ -25,46 +25,23 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+
 class NewEventActivity : AppCompatActivity() {
 
-    private lateinit var eventTitleEditText: EditText
-    private lateinit var locationEditText: EditText
-    private lateinit var selectedDateTextView: TextView
-    private lateinit var startTimeTextView: TextView
-    private lateinit var endTimeTextView: TextView
-    private lateinit var notesEditText: EditText
-    private lateinit var reminderTextView: TextView
-
-    // Category selection
-    private lateinit var categoryWork: TextView
-    private lateinit var categoryPersonal: TextView
-    private lateinit var categoryHealth: TextView
-    private lateinit var categorySocial: TextView
-    private var selectedCategory: String = "Work"
-
-    // Date & Time
-    private val calendar: Calendar = Calendar.getInstance()
-    private var startTimeHour: Int = 10
-    private var startTimeMinute: Int = 0
-    private var endTimeHour: Int = 11
-    private var endTimeMinute: Int = 0
-
-    private val apiService: ApiService by lazy {
-        val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(this))
-            .build()
-
-        Retrofit.Builder()
-            .baseUrl("http://localhost:8000/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ApiService::class.java)
-    }
+    // ... (existing properties)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_event)
+
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(view.paddingLeft, systemBars.top, view.paddingRight, view.paddingBottom)
+            insets
+        }
 
         initViews()
         setupInitialValues()
