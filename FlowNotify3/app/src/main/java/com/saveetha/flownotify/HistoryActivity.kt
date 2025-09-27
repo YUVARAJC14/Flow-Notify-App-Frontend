@@ -17,12 +17,16 @@ import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.Task
 import kotlinx.coroutines.launch
 
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+
 class HistoryActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var completedTasksRecyclerView: RecyclerView
     private lateinit var noHistoryTextView: TextView
     private lateinit var backButton: ImageButton
-    private lateinit var historyTaskAdapter: TaskAdapter
+    private lateinit var completedTaskAdapter: TaskAdapter
 
     private val apiService: ApiService by lazy {
         ApiClient.getInstance(this)
@@ -30,35 +34,36 @@ class HistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_history)
 
         initViews()
         setupListeners()
         fetchHistory()
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
     }
 
     private fun initViews() {
-        recyclerView = findViewById(R.id.rv_history_tasks)
+        completedTasksRecyclerView = findViewById(R.id.rv_completed_tasks)
         noHistoryTextView = findViewById(R.id.tv_no_history)
         backButton = findViewById(R.id.btn_back)
         
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        historyTaskAdapter = TaskAdapter(
+        completedTasksRecyclerView.layoutManager = LinearLayoutManager(this)
+        completedTaskAdapter = TaskAdapter(
             emptyList(),
             onTaskClick = { task ->
                 showTaskDetailsDialog(task)
             },
-            onTaskCheckedChange = { task, isChecked ->
-                // Not applicable for history
-            },
-            onDeleteClick = { task ->
-                // Not applicable for history
-            },
-            onFinalCompleteClick = { task ->
-                // Not applicable for history
-            }
+            onTaskCheckedChange = { _, _ -> },
+            onDeleteClick = { },
+            onFinalCompleteClick = { }
         )
-        recyclerView.adapter = historyTaskAdapter
+        completedTasksRecyclerView.adapter = completedTaskAdapter
     }
 
     private fun setupListeners() {
@@ -70,15 +75,14 @@ class HistoryActivity : AppCompatActivity() {
     private fun fetchHistory() {
         lifecycleScope.launch {
             try {
-                val response = apiService.getTasks("completed", null) // Assuming 'completed' fetches all non-active
+                val response = apiService.getTasks("completed", null)
                 if (response.isSuccessful) {
                     val tasks = response.body()?.values?.flatten() ?: emptyList()
                     if (tasks.isEmpty()) {
                         showEmptyState(true)
-                    }
-                    else {
+                    } else {
                         showEmptyState(false)
-                        historyTaskAdapter.updateData(tasks as List<Any>)
+                        completedTaskAdapter.updateData(tasks)
                     }
                 } else {
                     showError("Failed to load history")
@@ -93,10 +97,10 @@ class HistoryActivity : AppCompatActivity() {
 
     private fun showEmptyState(isEmpty: Boolean) {
         if (isEmpty) {
-            recyclerView.visibility = View.GONE
+            completedTasksRecyclerView.visibility = View.GONE
             noHistoryTextView.visibility = View.VISIBLE
         } else {
-            recyclerView.visibility = View.VISIBLE
+            completedTasksRecyclerView.visibility = View.VISIBLE
             noHistoryTextView.visibility = View.GONE
         }
     }

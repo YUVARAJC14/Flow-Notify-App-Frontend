@@ -103,6 +103,8 @@ def get_tasks(db: Session, user_id: str, search: str = None, date_filter: str = 
 
     if date_filter == "completed":
         completed_tasks = query.filter(task_models.Task.completed == True).order_by(task_models.Task.completed_at.desc()).all()
+        for task in completed_tasks:
+            task.id = str(task.id)
         return {"completed": completed_tasks}
 
     # For other views, only show non-completed tasks
@@ -110,10 +112,14 @@ def get_tasks(db: Session, user_id: str, search: str = None, date_filter: str = 
     
     if date_filter == "today":
         tasks = query.filter(task_models.Task.due_date == today).order_by(task_models.Task.due_time).all()
+        for task in tasks:
+            task.id = str(task.id)
         return {"today": tasks, "tomorrow": [], "upcoming": []}
     
     if date_filter == "upcoming":
         tasks = query.filter(task_models.Task.due_date >= day_after_tomorrow).order_by(task_models.Task.due_date, task_models.Task.due_time).all()
+        for task in tasks:
+            task.id = str(task.id)
         return {"today": [], "tomorrow": [], "upcoming": tasks}
 
     # Default "all" filter logic
