@@ -55,7 +55,7 @@ class VerificationCompleteActivity : AppCompatActivity() {
 
         // Set button click listener
         btnContinue.setOnClickListener {
-            // Navigate to onboarding screen
+            // Navigate to the new single onboarding screen
             val intent = Intent(this, OnboardingActivity::class.java)
             startActivity(intent)
             finish() // This will close the VerificationCompleteActivity
@@ -81,24 +81,24 @@ class VerificationCompleteActivity : AppCompatActivity() {
         // Animate text and button appearance
         val titleFadeIn = ObjectAnimator.ofFloat(tvTitle, View.ALPHA, 0f, 1f).apply {
             duration = 400
-            startDelay = 800
+            startDelay = 200
         }
 
         val descFadeIn = ObjectAnimator.ofFloat(tvDescription, View.ALPHA, 0f, 1f).apply {
             duration = 400
-            startDelay = 1000
+            startDelay = 300
         }
 
         val buttonFadeIn = ObjectAnimator.ofFloat(btnContinue, View.ALPHA, 0f, 1f).apply {
             duration = 400
-            startDelay = 1200
+            startDelay = 400
         }
 
         val buttonTranslateY =
             ObjectAnimator.ofFloat(btnContinue, View.TRANSLATION_Y, 100f, 0f).apply {
                 duration = 500
                 interpolator = AccelerateDecelerateInterpolator()
-                startDelay = 1200
+                startDelay = 400
             }
 
         // Play all animations together

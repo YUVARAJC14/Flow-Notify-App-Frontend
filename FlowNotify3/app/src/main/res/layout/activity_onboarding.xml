@@ -4,111 +4,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/white"
     tools:context=".OnboardingActivity">
 
-    <!-- App Icon -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardViewIcon"
-        android:layout_width="310dp"
-        android:layout_height="304dp"
-        android:layout_marginTop="100dp"
-        app:cardBackgroundColor="#fefefe"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:id="@+id/ivAppIcon"
-            android:layout_width="282dp"
-            android:layout_height="258dp"
-            android:layout_gravity="center"
-            android:contentDescription="App logo"
-            android:src="@drawable/ic_notification_logo" />
-    </androidx.cardview.widget.CardView>
-
-    <!-- Title -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:text="Smart Notifications"
-        android:textColor="#222222"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardViewIcon" />
-
-    <!-- Description -->
-    <TextView
-        android:id="@+id/tvDescription"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
         android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/tab_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_next"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tabBackground="@drawable/onboarding_dot_selector"
+        app:tabGravity="center"
+        app:tabIndicatorHeight="0dp"
+        android:background="@android:color/transparent" />
+
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
-        android:gravity="center"
-        android:text="Get personalized reminders that adapt to your schedule and priorities"
-        android:textColor="#666666"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
-
-    <!-- Page Indicator Dots -->
-
-    <!-- Next Button -->
-    <LinearLayout
-        android:id="@+id/layoutDots"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="100dp"
-        android:orientation="horizontal"
+        android:layout_marginBottom="64dp"
+        android:backgroundTint="@color/primary_blue"
+        android:text="Next"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.491"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDescription">
-
-        <View
-            android:id="@+id/dot1"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/dot_active" />
-
-        <View
-            android:id="@+id/dot2"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/dot_inactive" />
-
-        <View
-            android:id="@+id/dot3"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/dot_inactive" />
-    </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnNext"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Next button"
-        android:src="@drawable/ic_arrow_forward"
-        app:backgroundTint="#4F7EF8"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutDots"
-        app:layout_constraintVertical_bias="0.251"
-        app:tint="#FFFFFF" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
