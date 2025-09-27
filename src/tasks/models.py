@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Date, Time, Enum, ForeignKey, Bo
 from sqlalchemy.orm import relationship
 from ..database.base import Base
 import enum
+import uuid
 
 class PriorityEnum(str, enum.Enum):
     high = "High"
@@ -21,8 +22,7 @@ class GoalStatusEnum(str, enum.Enum):
 
 class Task(Base):
     __tablename__ = "tasks"
-
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     title = Column(String, index=True)
     description = Column(String, nullable=True)
     due_date = Column(Date)
