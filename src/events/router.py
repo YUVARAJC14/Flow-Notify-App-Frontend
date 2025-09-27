@@ -80,8 +80,8 @@ def read_events(
 
 @router.put("/{event_id}", response_model=schemas.Event)
 def update_event(
-    event_id: int,
-    event_update: schemas.EventUpdate,
+    event_id: str,
+    event_update: schemas.EventPartialUpdate,
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
@@ -98,7 +98,7 @@ def update_event(
 
 @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_event(
-    event_id: int,
+    event_id: str,
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):

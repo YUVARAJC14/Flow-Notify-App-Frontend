@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from datetime import date, time, datetime
 from typing import Optional, List
 from enum import Enum
@@ -135,7 +135,7 @@ class TaskPartialUpdate(BaseModel):
     due_time: Optional[time] = None
     priority: Optional[PriorityEnum] = None
     reminder: Optional[ReminderEnum] = None
-    completed: Optional[bool] = None
+    completed: Optional[bool] = Field(None, alias='isCompleted')
     recurrence_rule: Optional[str] = None
     recurrence_end_date: Optional[date] = None
     goal_id: Optional[int] = None
@@ -184,6 +184,18 @@ class Event(EventBase):
 
 class EventUpdate(BaseModel):
     completed: bool
+
+
+class EventPartialUpdate(BaseModel):
+    title: Optional[str] = None
+    location: Optional[str] = None
+    start_datetime: Optional[datetime] = None
+    end_datetime: Optional[datetime] = None
+    category: Optional[CategoryEnum] = None
+    notes: Optional[str] = None
+    reminder_minutes_before: Optional[int] = None
+    completed: Optional[bool] = Field(None, alias='isCompleted')
+
 
 
 class EventResponse(BaseModel):

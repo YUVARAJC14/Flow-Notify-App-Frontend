@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, or_
 from src.auth import models as auth_models
 from src.tasks import models as task_models
 from src.events import models as event_models
@@ -111,7 +111,8 @@ def get_tasks(db: Session, user_id: str, search: str = None, date_filter: str = 
     query = query.filter(task_models.Task.completed == False)
     
     if date_filter == "today":
-        tasks = query.filter(task_models.Task.due_date == today).order_by(task_models.Task.due_time).all()
+        now_time = datetime.now().time()
+        tasks = query.filter(task_models.Task.due_date == today, task_models.Task.due_time > now_time).order_by(task_models.Task.due_time).all()
         for task in tasks:
             task.id = str(task.id)
         return {"today": tasks, "tomorrow": [], "upcoming": []}
@@ -134,10 +135,10 @@ def get_tasks(db: Session, user_id: str, search: str = None, date_filter: str = 
 
     return {"today": today_tasks, "tomorrow": tomorrow_tasks, "upcoming": upcoming_tasks}
 
-def get_task_by_id(db: Session, task_id: int, user_id: str):
+def get_task_by_id(db: Session, task_id: str, user_id: str):
     return db.query(task_models.Task).filter(and_(task_models.Task.id == task_id, task_models.Task.owner_id == user_id)).first()
 
-def update_task(db: Session, task: task_models.Task, task_update: schemas_all.TaskCreate):
+def update_task(db: Session, task: task_models.Task, task_update: schemas_all.TaskPartialUpdate):
     task_data = task_update.model_dump(exclude_unset=True)
     for key, value in task_data.items():
         setattr(task, key, value)
@@ -233,20 +234,25 @@ def get_today_progress(db: Session, user_id: int) -> float:
     return (completed_items / total_items) * 100
 
 def get_upcoming_tasks(db: Session, user_id: int, limit: int = 3):
-    today = date.today()
+    now = datetime.now()
+    today = now.date()
     return db.query(task_models.Task).filter(
         task_models.Task.owner_id == user_id,
-        task_models.Task.due_date >= today,
-        task_models.Task.completed == False
+        task_models.Task.completed == False,
+        or_(
+            task_models.Task.due_date > today,
+            and_(task_models.Task.due_date == today, task_models.Task.due_time > now.time())
+        )
     ).order_by(task_models.Task.due_date, task_models.Task.due_time).limit(limit).all()
 
 def get_today_schedule(db: Session, user_id: int):
-    today = date.today()
-    start_of_day = datetime.combine(today, datetime.min.time())
+    now = datetime.now()
+    today = now.date()
     end_of_day = datetime.combine(today, datetime.max.time())
     return db.query(event_models.Event).filter(
         event_models.Event.owner_id == user_id,
-        event_models.Event.start_datetime >= start_of_day,
+        event_models.Event.completed == False,  # Hide completed events
+        event_models.Event.start_datetime >= now,  # Only show events that haven't started
         event_models.Event.start_datetime <= end_of_day
     ).order_by(event_models.Event.start_datetime).all()
 
@@ -292,10 +298,10 @@ def get_events(db: Session, user_id: int, start_date: date = None, end_date: dat
         query = query.filter(event_models.Event.category == category)
     return query.all()
 
-def get_event_by_id(db: Session, event_id: int, user_id: int):
+def get_event_by_id(db: Session, event_id: str, user_id: int):
     return db.query(event_models.Event).filter(and_(event_models.Event.id == event_id, event_models.Event.owner_id == user_id)).first()
 
-def update_event(db: Session, event: event_models.Event, event_update: schemas_all.EventUpdate):
+def update_event(db: Session, event: event_models.Event, event_update: schemas_all.EventPartialUpdate):
     event_data = event_update.model_dump(exclude_unset=True)
     for key, value in event_data.items():
         setattr(event, key, value)

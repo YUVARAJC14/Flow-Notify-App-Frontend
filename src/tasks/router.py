@@ -33,7 +33,7 @@ def read_tasks(
 
 @router.patch("/{task_id}", response_model=schemas.Task)
 def update_task(
-    task_id: int,
+    task_id: str,
     task_update: schemas.TaskPartialUpdate,
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
@@ -45,7 +45,7 @@ def update_task(
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(
-    task_id: int,
+    task_id: str,
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
