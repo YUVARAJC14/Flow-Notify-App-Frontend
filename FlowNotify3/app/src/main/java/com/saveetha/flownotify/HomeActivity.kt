@@ -246,11 +246,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        val historyButton = findViewById<ImageButton>(R.id.btn_history_menu)
-        historyButton.setOnClickListener { 
-            startActivity(Intent(this, HistoryActivity::class.java))
-        }
-
         addTaskButton.setOnClickListener {
             startActivity(Intent(this, NewTaskActivity::class.java))
         }

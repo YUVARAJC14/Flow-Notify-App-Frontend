@@ -216,9 +216,14 @@ def get_today_progress(db: Session, user_id: int) -> float:
         event_models.Event.start_datetime >= start_of_day,
         event_models.Event.start_datetime <= end_of_day
     ).count()
-    # Assuming events are implicitly 'completed' once they happen, we can count all of them.
-    # If events have a completion status, this would need to be adjusted.
-    completed_events_today = total_events_today
+    
+    # Correctly count only the events marked as completed
+    completed_events_today = db.query(event_models.Event).filter(
+        event_models.Event.owner_id == user_id,
+        event_models.Event.start_datetime >= start_of_day,
+        event_models.Event.start_datetime <= end_of_day,
+        event_models.Event.completed == True
+    ).count()
 
     total_items = total_tasks_today + total_events_today
     completed_items = completed_tasks_today + completed_events_today

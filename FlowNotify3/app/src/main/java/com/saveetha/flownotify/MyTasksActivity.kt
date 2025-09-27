@@ -91,6 +91,10 @@ class MyTasksActivity : AppCompatActivity() {
         chipToday.setOnClickListener { updateFilter("today") }
         chipUpcoming.setOnClickListener { updateFilter("upcoming") }
         chipCompleted.setOnClickListener { updateFilter("completed") }
+
+        findViewById<ImageButton>(R.id.btn_history_menu).setOnClickListener { 
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
     }
 
     private fun setupBottomNavigation() {
