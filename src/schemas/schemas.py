@@ -119,7 +119,7 @@ class TaskCreate(BaseModel):
     reminders: List[str]
 
 class Task(TaskBase):
-    id: int
+    id: str
     owner_id: str
     subtasks: List['Task'] = [] # For hierarchical tasks
     model_config = ConfigDict(from_attributes=True)

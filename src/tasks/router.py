@@ -38,7 +38,7 @@ def update_task(
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
-    db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
+    db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=str(current_user.id))
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return crud.update_task(db=db, task=db_task, task_update=task_update)
@@ -49,7 +49,7 @@ def delete_task(
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
-    db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=current_user.id)
+    db_task = crud.get_task_by_id(db=db, task_id=task_id, user_id=str(current_user.id))
     if not db_task:
         raise HTTPException(status_code=4.04, detail="Task not found")
     crud.delete_task(db=db, task=db_task)

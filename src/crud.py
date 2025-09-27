@@ -51,7 +51,7 @@ def create_user(db: Session, user: schemas_all.UserCreate):
     db.refresh(db_user)
     return db_user
 
-def create_user_task(db: Session, task: schemas_all.TaskCreate, user_id: int):
+def create_user_task(db: Session, task: schemas_all.TaskCreate, user_id: str):
     # Convert string dates and times to Python objects
     due_date_obj = datetime.strptime(task.dueDate, '%Y-%m-%d').date()
     due_time_obj = datetime.strptime(task.dueTime, '%H:%M').time()
@@ -86,7 +86,7 @@ def create_user_task(db: Session, task: schemas_all.TaskCreate, user_id: int):
     db.refresh(db_task)
     return db_task
 
-def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = "all", parent_id: Optional[int] = None):
+def get_tasks(db: Session, user_id: str, search: str = None, date_filter: str = "all", parent_id: Optional[int] = None):
     query = db.query(task_models.Task).filter(task_models.Task.owner_id == user_id)
 
     if parent_id is not None:
@@ -119,13 +119,16 @@ def get_tasks(db: Session, user_id: int, search: str = None, date_filter: str = 
     # Default "all" filter logic
     tasks = query.order_by(task_models.Task.due_date, task_models.Task.due_time).all()
     
+    for task in tasks:
+        task.id = str(task.id)
+
     today_tasks = [task for task in tasks if task.due_date == today]
     tomorrow_tasks = [task for task in tasks if task.due_date == tomorrow]
     upcoming_tasks = [task for task in tasks if task.due_date >= day_after_tomorrow]
 
     return {"today": today_tasks, "tomorrow": tomorrow_tasks, "upcoming": upcoming_tasks}
 
-def get_task_by_id(db: Session, task_id: int, user_id: int):
+def get_task_by_id(db: Session, task_id: int, user_id: str):
     return db.query(task_models.Task).filter(and_(task_models.Task.id == task_id, task_models.Task.owner_id == user_id)).first()
 
 def update_task(db: Session, task: task_models.Task, task_update: schemas_all.TaskCreate):
@@ -163,6 +166,7 @@ def update_task(db: Session, task: task_models.Task, task_update: schemas_all.Ta
                 db.commit()
                 db.refresh(parent_task)
 
+    task.id = str(task.id)
     return task
 
 def delete_task(db: Session, task: task_models.Task):

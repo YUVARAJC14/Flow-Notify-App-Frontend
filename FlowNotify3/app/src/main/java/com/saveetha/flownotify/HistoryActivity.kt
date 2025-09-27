@@ -43,9 +43,21 @@ class HistoryActivity : AppCompatActivity() {
         backButton = findViewById(R.id.btn_back)
         
         recyclerView.layoutManager = LinearLayoutManager(this)
-        historyTaskAdapter = TaskAdapter(emptyList<Any>()) { task ->
-            showTaskDetailsDialog(task)
-        }
+        historyTaskAdapter = TaskAdapter(
+            emptyList(),
+            onTaskClick = { task ->
+                showTaskDetailsDialog(task)
+            },
+            onTaskCheckedChange = { task, isChecked ->
+                // Not applicable for history
+            },
+            onDeleteClick = { task ->
+                // Not applicable for history
+            },
+            onFinalCompleteClick = { task ->
+                // Not applicable for history
+            }
+        )
         recyclerView.adapter = historyTaskAdapter
     }
 

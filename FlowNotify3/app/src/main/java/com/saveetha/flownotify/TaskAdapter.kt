@@ -3,6 +3,7 @@ package com.saveetha.flownotify
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
@@ -11,7 +12,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.saveetha.flownotify.network.Task
 import com.saveetha.flownotify.network.TaskResponse
 
-class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) -> Unit) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class TaskAdapter(
+    private var items: List<Any>,
+    private val onTaskClick: (Task) -> Unit,
+    private val onTaskCheckedChange: (Task, Boolean) -> Unit,
+    private val onDeleteClick: (Task) -> Unit,
+    private val onFinalCompleteClick: (Task) -> Unit
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private val expandedPositions = mutableSetOf<Int>()
 
     companion object {
         private const val VIEW_TYPE_HEADER = 0
@@ -23,6 +32,9 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
         val time: TextView = itemView.findViewById(R.id.task_time)
         val priorityDot: View = itemView.findViewById(R.id.task_priority_dot)
         val checkBoxImage: ImageView = itemView.findViewById(R.id.task_checkbox_image)
+        val taskActionsLayout: View = itemView.findViewById(R.id.task_actions_layout)
+        val completeButton: Button = itemView.findViewById(R.id.btn_task_completed)
+        val deleteButton: Button = itemView.findViewById(R.id.btn_task_delete)
     }
 
     class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -54,8 +66,7 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
             val task = items[position] as Task
             holder.title.text = task.title
             holder.time.text = task.time
-            holder.checkBoxImage.setImageResource(if (task.isCompleted) R.drawable.checkbox_selector else R.drawable.checkbox_selector)
-            holder.checkBoxImage.setImageState(intArrayOf(if (task.isCompleted) android.R.attr.state_checked else -android.R.attr.state_checked), false)
+            holder.checkBoxImage.setImageResource(if (task.isCompleted) R.drawable.checkbox_checked else R.drawable.checkbox_unchecked)
 
             val colorRes = when (task.priority.lowercase()) {
                 "high" -> R.color.priority_high
@@ -65,18 +76,31 @@ class TaskAdapter(private var items: List<Any>, private val onTaskClick: (Task) 
             }
             holder.priorityDot.background.setTint(ContextCompat.getColor(holder.itemView.context, colorRes))
 
+            val isExpanded = expandedPositions.contains(position)
+            holder.taskActionsLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            holder.checkBoxImage.isSelected = isExpanded
+
             holder.itemView.setOnClickListener { onTaskClick(task) }
 
-            holder.checkBoxImage.setOnClickListener { view ->
-                val isChecked = !task.isCompleted
-                val updatedTask = task.copy(isCompleted = isChecked)
-                val mutableItems = items.toMutableList()
-                mutableItems[position] = updatedTask
-                items = mutableItems
+            holder.checkBoxImage.setOnClickListener { 
+                if (isExpanded) {
+                    expandedPositions.remove(position)
+                } else {
+                    expandedPositions.add(position)
+                }
                 notifyItemChanged(position)
-                // Trigger the onTaskClick callback with the updated task to handle completion logic
-                onTaskClick(updatedTask)
-                view.performClick() // Simulate a click to trigger the state change drawable
+            }
+
+            holder.completeButton.setOnClickListener {
+                onFinalCompleteClick(task)
+                expandedPositions.remove(position)
+                notifyItemChanged(position)
+            }
+
+            holder.deleteButton.setOnClickListener { 
+                onDeleteClick(task)
+                expandedPositions.remove(position)
+                notifyItemChanged(position)
             }
         }
     }
