@@ -247,19 +247,8 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         val historyButton = findViewById<ImageButton>(R.id.btn_history_menu)
-        historyButton.setOnClickListener { view ->
-            val popup = PopupMenu(this@HomeActivity, view)
-            popup.menuInflater.inflate(R.menu.home_menu, popup.menu)
-            popup.setOnMenuItemClickListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.action_history -> {
-                        startActivity(Intent(this, HistoryActivity::class.java))
-                        true
-                    }
-                    else -> false
-                }
-            }
-            popup.show()
+        historyButton.setOnClickListener { 
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
 
         addTaskButton.setOnClickListener {

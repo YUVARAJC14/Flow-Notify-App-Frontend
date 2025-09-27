@@ -68,6 +68,9 @@
             android:name=".ProfileActivity"
             android:exported="false" />
         <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".InsightsActivity"
             android:exported="false" />
         <activity
