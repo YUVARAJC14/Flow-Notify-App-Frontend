@@ -1,0 +1,11 @@
+<resources>
+    <string-array name="notification_sounds">
+        <item>Default</item>
+        <item>None</item>
+        <item>Beep</item>
+        <item>Chime</item>
+        <item>Ding</item>
+        <item>Ping</item>
+        <item>Tone</item>
+    </string-array>
+</resources>

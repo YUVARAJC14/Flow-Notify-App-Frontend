@@ -2,6 +2,7 @@ package com.saveetha.flownotify
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -83,19 +84,62 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         findViewById<Button>(R.id.btn_edit_profile).setOnClickListener {
-            val intent = Intent(this, EditProfileActivity::class.java)
-            startActivity(intent)
+            Log.d("ProfileActivity", "Edit Profile clicked")
+            startActivity(Intent(this, EditProfileActivity::class.java))
         }
 
         themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            Log.d("ProfileActivity", "Theme switch toggled: $isChecked")
             applyTheme(isChecked)
         }
 
+        findViewById<LinearLayout>(R.id.option_profile_information).setOnClickListener {
+            Log.d("ProfileActivity", "Profile Information clicked")
+            startActivity(Intent(this, ProfileInformationActivity::class.java))
+        }
+
+        findViewById<LinearLayout>(R.id.option_password_security).setOnClickListener {
+            Log.d("ProfileActivity", "Password & Security clicked")
+            startActivity(Intent(this, PasswordSecurityActivity::class.java))
+        }
+
+        findViewById<LinearLayout>(R.id.option_connected_accounts).setOnClickListener {
+            Log.d("ProfileActivity", "Connected Accounts clicked")
+            startActivity(Intent(this, ConnectedAccountsActivity::class.java))
+        }
+
         findViewById<LinearLayout>(R.id.option_language).setOnClickListener {
+            Log.d("ProfileActivity", "Language clicked")
             showLanguageOptions()
         }
 
+        findViewById<LinearLayout>(R.id.option_notification_settings).setOnClickListener {
+            Log.d("ProfileActivity", "Notification Settings clicked")
+            startActivity(Intent(this, NotificationSettingsActivity::class.java))
+        }
+
+        findViewById<LinearLayout>(R.id.option_contact_support).setOnClickListener {
+            Log.d("ProfileActivity", "Contact Support clicked")
+            startActivity(Intent(this, SupportActivity::class.java))
+        }
+
+        findViewById<LinearLayout>(R.id.option_feedback).setOnClickListener {
+            Log.d("ProfileActivity", "Feedback clicked")
+            showFeedbackForm()
+        }
+
+        findViewById<LinearLayout>(R.id.option_privacy_policy).setOnClickListener {
+            Log.d("ProfileActivity", "Privacy Policy clicked")
+            openWebPage("https://www.flownotify.com/privacy-policy")
+        }
+
+        findViewById<LinearLayout>(R.id.option_terms_of_service).setOnClickListener {
+            Log.d("ProfileActivity", "Terms of Service clicked")
+            openWebPage("https://www.flownotify.com/terms-of-service")
+        }
+
         logoutButton.setOnClickListener {
+            Log.d("ProfileActivity", "Logout clicked")
             showLogoutConfirmation()
         }
     }
@@ -178,6 +222,15 @@ class ProfileActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+
+    private fun showFeedbackForm() {
+        startActivity(Intent(this, FeedbackActivity::class.java))
+    }
+
+    private fun openWebPage(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+        startActivity(intent)
     }
 
     override fun onResume() {
