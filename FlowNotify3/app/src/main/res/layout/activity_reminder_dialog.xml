@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/black"
-            android:text="Dismiss"
+            android:text="❌"
             android:backgroundTint="@color/light_gray" />
 
         <Button
@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="16dp"
-            android:text="Finished"
+            android:text="✅"
             android:backgroundTint="@color/blue"/>
 
     </LinearLayout>
