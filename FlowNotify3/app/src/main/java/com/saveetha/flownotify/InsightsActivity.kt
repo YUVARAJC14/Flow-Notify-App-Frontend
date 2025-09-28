@@ -105,34 +105,41 @@ class InsightsActivity : AppCompatActivity() {
     }
 
     private fun setupFilterListeners() {
-        val filters = listOf(filterDay, filterWeek, filterMonth, filterYear)
+        val filters = mapOf(
+            filterDay to "day",
+            filterWeek to "week",
+            filterMonth to "month",
+            filterYear to "year"
+        )
 
-        // Set click listeners for each filter
-        filters.forEach { filter ->
+        filters.keys.forEach { filter ->
             filter.setOnClickListener {
-                // Reset all filters
-                resetFilters(filters)
-
-                // Set the selected filter
-                it.setBackgroundResource(R.drawable.bg_filter_selected)
-                (it as TextView).setTextColor(ContextCompat.getColor(this, R.color.white))
-
-                // Update data based on selected filter
-                when (it.id) {
-                    R.id.filter_day -> updateDataForTimeframe("day")
-                    R.id.filter_week -> updateDataForTimeframe("week")
-                    R.id.filter_month -> updateDataForTimeframe("month")
-                    R.id.filter_year -> updateDataForTimeframe("year")
+                val period = filters[it]
+                if (period != null) {
+                    updateDataForTimeframe(period)
+                    updateFilterUI(filters.keys.toList(), it as TextView)
                 }
+            }
+        }
+
+        // Initial state
+        updateFilterUI(filters.keys.toList(), filterWeek)
+    }
+
+    private fun updateFilterUI(allFilters: List<TextView>, selectedFilter: TextView) {
+        allFilters.forEach { filter ->
+            if (filter == selectedFilter) {
+                filter.setBackgroundResource(R.drawable.bg_filter_selected)
+                filter.setTextColor(Color.WHITE)
+            } else {
+                filter.setBackgroundResource(R.drawable.bg_filter_unselected)
+                filter.setTextColor(ContextCompat.getColor(this, R.color.gray))
             }
         }
     }
 
     private fun resetFilters(filters: List<TextView>) {
-        filters.forEach {
-            it.setBackgroundColor(ContextCompat.getColor(this, R.color.light_gray))
-            it.setTextColor(ContextCompat.getColor(this, R.color.gray))
-        }
+        // This function is no longer needed as updateFilterUI handles all states
     }
 
     private fun updateDataForTimeframe(timeframe: String) {
