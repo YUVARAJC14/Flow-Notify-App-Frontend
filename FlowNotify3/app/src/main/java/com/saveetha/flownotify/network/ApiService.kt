@@ -45,6 +45,9 @@ interface ApiService {
     @GET("api/insights")
     suspend fun getInsights(@Query("period") period: String): Response<InsightsResponse>
 
+    @GET("api/insights/activity-summary")
+    suspend fun getActivitySummary(@Query("period") period: String): Response<ActivitySummaryResponse>
+
     @PATCH("api/tasks/{taskId}")
     suspend fun updateTask(@Path("taskId") taskId: String, @Body body: Map<String, Boolean>): Response<Task>
 

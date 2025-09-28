@@ -132,12 +132,12 @@ data class InsightsResponse(
 )
 
 data class FlowScore(
-    val score: Int,
+    val score: Float,
     val comparison: Comparison
 )
 
 data class Comparison(
-    val change: Int,
+    val change: Float,
     val period: String
 )
 
@@ -151,4 +151,8 @@ data class ProductiveTime(
     val day: Int,
     val hour: Int,
     val intensity: Float
+)
+
+data class ActivitySummaryResponse(
+    val summary: String
 )

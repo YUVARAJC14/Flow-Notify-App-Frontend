@@ -68,10 +68,11 @@
             android:name=".ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".HistoryActivity"
-            android:exported="false" />
-        <activity
             android:name=".InsightsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".HistoryActivity"
             android:exported="false" />
         <activity
             android:name=".CalendarActivity"
@@ -90,12 +91,6 @@
             android:exported="false" />
         <activity
             android:name=".NameInputActivity"
-            android:exported="false" />
-        <activity
-            android:name=".OnboardingThreeActivity"
-            android:exported="false" />
-        <activity
-            android:name=".OnboardingTwoActivity"
             android:exported="false" />
         <activity
             android:name=".OnboardingActivity"

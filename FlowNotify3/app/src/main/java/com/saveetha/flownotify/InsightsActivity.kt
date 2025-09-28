@@ -3,6 +3,7 @@ package com.saveetha.flownotify
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -18,11 +19,14 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.saveetha.flownotify.network.ActivitySummaryResponse
 import com.saveetha.flownotify.network.ApiClient
 import com.saveetha.flownotify.network.ApiService
 import com.saveetha.flownotify.network.InsightsResponse
 import com.saveetha.flownotify.network.TaskCompletion
 import kotlinx.coroutines.launch
+import java.io.IOException
+import retrofit2.HttpException
 
 class InsightsActivity : AppCompatActivity() {
 
@@ -35,6 +39,7 @@ class InsightsActivity : AppCompatActivity() {
     private lateinit var flowScoreTextView: TextView
     private lateinit var flowScoreMessageTextView: TextView
     private lateinit var flowPieChart: PieChartView
+    private lateinit var tvActivitySummary: TextView // New TextView for summary
 
     private val apiService: ApiService by lazy {
         ApiClient.getInstance(this)
@@ -60,6 +65,7 @@ class InsightsActivity : AppCompatActivity() {
         flowScoreTextView = findViewById(R.id.tv_flow_score)
         flowScoreMessageTextView = findViewById(R.id.tv_flow_score_message)
         flowPieChart = findViewById(R.id.pie_chart_flow)
+        tvActivitySummary = findViewById(R.id.tv_activity_summary) // Initialize new TextView
     }
 
     private fun setupBottomNavigation() {
@@ -128,28 +134,42 @@ class InsightsActivity : AppCompatActivity() {
     private fun updateDataForTimeframe(timeframe: String) {
         lifecycleScope.launch {
             try {
-                val response = apiService.getInsights(timeframe)
-                if (response.isSuccessful) {
-                    val insights = response.body()
+                val insightsResponse = apiService.getInsights(timeframe)
+                val summaryResponse = apiService.getActivitySummary(timeframe) // Fetch summary
+
+                if (insightsResponse.isSuccessful && summaryResponse.isSuccessful) {
+                    val insights = insightsResponse.body()
+                    val summary = summaryResponse.body()
+
                     insights?.let {
-                        flowScoreTextView.text = "${it.flowScore.score}%"
-                        flowPieChart.setPercentage(it.flowScore.score.toFloat())
+                        val scoreInt = it.flowScore.score.toInt()
+                        flowScoreTextView.text = "$scoreInt%"
+                        flowPieChart.setPercentage(it.flowScore.score)
 
                         flowScoreMessageTextView.text = when {
-                            it.flowScore.score >= 80 -> "Excellent flow! Keep up the great work."
-                            it.flowScore.score >= 60 -> "Good flow! You're on track."
-                            it.flowScore.score >= 40 -> "Steady progress. Aim for higher flow."
+                            scoreInt >= 80 -> "Excellent flow! Keep up the great work."
+                            scoreInt >= 60 -> "Good flow! You're on track."
+                            scoreInt >= 40 -> "Steady progress. Aim for higher flow."
                             else -> "Let's boost your flow! Focus on key tasks."
                         }
 
                         setupBarChart(it.taskCompletion)
                         setupHeatmap(it.productiveTimes)
                     }
+                    summary?.let {
+                        tvActivitySummary.text = it.summary // Display summary
+                    }
                 } else {
                     // Handle error
+                    val errorMessage = insightsResponse.errorBody()?.string() ?: summaryResponse.errorBody()?.string() ?: "Failed to load insights."
+                    Log.e("InsightsActivity", "Error: $errorMessage")
                 }
+            } catch (e: IOException) {
+                Log.e("InsightsActivity", "Network error: ${e.message}")
+            } catch (e: HttpException) {
+                Log.e("InsightsActivity", "HTTP error: ${e.message}")
             } catch (e: Exception) {
-                // Handle exception
+                Log.e("InsightsActivity", "An unexpected error occurred: ${e.message}")
             }
         }
     }

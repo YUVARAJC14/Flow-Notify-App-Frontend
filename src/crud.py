@@ -372,6 +372,14 @@ def get_events_by_month(db: Session, user_id: int, year: int, month: int):
         event_models.Event.start_datetime < end_datetime
     ).all()
 
+def get_completed_events_by_date_range(db: Session, user_id: str, start_date: date, end_date: date):
+    return db.query(event_models.Event).filter(
+        event_models.Event.owner_id == user_id,
+        event_models.Event.completed == True,
+        event_models.Event.start_datetime >= start_date,
+        event_models.Event.start_datetime <= end_date
+    ).all()
+
 def get_events_by_date(db: Session, user_id: int, event_date: date):
     start_datetime = datetime.combine(event_date, datetime.min.time())
     end_datetime = datetime.combine(event_date, datetime.max.time())
