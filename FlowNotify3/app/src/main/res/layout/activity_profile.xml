@@ -541,7 +541,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:contentDescription="@string/app_version"
-                            android.src="@drawable/ic_info"
+                            android:src="@drawable/ic_info"
                             app:tint="#757575" />
 
                         <TextView

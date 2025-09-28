@@ -45,6 +45,15 @@ interface ApiService {
     @GET("api/insights")
     suspend fun getInsights(@Query("period") period: String): Response<InsightsResponse>
 
+    @GET("api/users/me")
+    suspend fun getUserProfile(): Response<User>
+
+    @PATCH("api/users/me/settings")
+    suspend fun updateUserSettings(@Body body: Map<String, String>): Response<Unit>
+
+    @POST("api/auth/logout")
+    suspend fun logout(@Body body: Map<String, String>): Response<Unit>
+
     @GET("api/insights/activity-summary")
     suspend fun getActivitySummary(@Query("period") period: String): Response<ActivitySummaryResponse>
 
