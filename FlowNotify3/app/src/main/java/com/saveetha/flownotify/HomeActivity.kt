@@ -1,19 +1,21 @@
+
 package com.saveetha.flownotify
 
 import android.Manifest
+import android.animation.AnimatorSet
+import android.animation.ValueAnimator
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +25,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.saveetha.flownotify.network.ApiClient
 import com.saveetha.flownotify.network.ApiService
@@ -33,43 +39,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-import android.animation.AnimatorSet
-import android.animation.ValueAnimator
-
-// ... other imports ...
-
 class HomeActivity : AppCompatActivity() {
-
-    // ... existing code ...
-
-    private fun animatePieChart(finalPercentage: Float) {
-        // Ensure the pie chart starts at 0 before any animation
-        flowPieChart.setPercentage(0f)
-
-        // Stage 1: Animate from 0% to 100%
-        val animatorTo100 = ValueAnimator.ofFloat(0f, 100f).apply {
-            duration = 500 // Fast sweep to 100%
-            addUpdateListener { animation ->
-                flowPieChart.setPercentage(animation.animatedValue as Float)
-            }
-        }
-
-        // Stage 2: Animate from 100% to the final percentage
-        val animatorToFinal = ValueAnimator.ofFloat(100f, finalPercentage).apply {
-            duration = 800 // Slower settle to final percentage
-            addUpdateListener { animation ->
-                flowPieChart.setPercentage(animation.animatedValue as Float)
-            }
-        }
-
-        // Chain the animations
-        AnimatorSet().apply {
-            playSequentially(animatorTo100, animatorToFinal)
-            start()
-        }
-    }
-
-    // ... rest of the class ...
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -77,6 +47,60 @@ class HomeActivity : AppCompatActivity() {
         if (!isGranted) {
             Toast.makeText(this, "Notifications permission denied. You will not receive reminders.", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private lateinit var greetingTextView: TextView
+    private lateinit var dateTextView: TextView
+    private lateinit var flowPercentageTextView: TextView
+    private lateinit var pieChart: PieChart
+    private lateinit var flowMessageTextView: TextView
+    private lateinit var upcomingTasksRecyclerView: RecyclerView
+    private lateinit var scheduleRecyclerView: RecyclerView
+    private lateinit var emptyUpcomingTasks: LinearLayout
+    private lateinit var emptySchedule: LinearLayout
+    private lateinit var addTaskButton: Button
+    private lateinit var addEventButton: Button
+
+    private lateinit var upcomingTaskAdapter: UpcomingTaskAdapter
+    private lateinit var scheduleEventAdapter: ScheduleEventAdapter
+
+    private val apiService: ApiService by lazy {
+        ApiClient.getInstance(this)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_home)
+
+        initViews()
+        setupCurrentDate()
+        setupBottomNavigation()
+        setupListeners()
+        askNotificationPermission()
+        checkAndRequestExactAlarmPermission()
+        loadInitialData()
+    }
+
+    private fun initViews() {
+        greetingTextView = findViewById(R.id.tv_greeting)
+        dateTextView = findViewById(R.id.tv_date)
+        flowPercentageTextView = findViewById(R.id.tv_flow_percentage)
+        flowMessageTextView = findViewById(R.id.tv_flow_message)
+        pieChart = findViewById(R.id.pie_chart_flow)
+        upcomingTasksRecyclerView = findViewById(R.id.upcoming_tasks_recyclerview)
+        scheduleRecyclerView = findViewById(R.id.schedule_recyclerview)
+        emptyUpcomingTasks = findViewById(R.id.empty_upcoming_tasks)
+        emptySchedule = findViewById(R.id.empty_schedule)
+        addTaskButton = findViewById(R.id.btn_add_task)
+        addEventButton = findViewById(R.id.btn_add_event)
+
+        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList()) { task -> showTaskDetailsDialog(task) }
+        upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
+        upcomingTasksRecyclerView.adapter = upcomingTaskAdapter
+
+        scheduleEventAdapter = ScheduleEventAdapter(emptyList()) { event -> showEventDetailsDialog(event) }
+        scheduleRecyclerView.layoutManager = LinearLayoutManager(this)
+        scheduleRecyclerView.adapter = scheduleEventAdapter
     }
 
     private fun askNotificationPermission() {
@@ -99,139 +123,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-
-    private lateinit var greetingTextView: TextView
-    private lateinit var dateTextView: TextView
-    private lateinit var flowPercentageTextView: TextView
-    private lateinit var flowPieChart: PieChartView // Changed
-    private lateinit var flowMessageTextView: TextView // Added
-    private lateinit var upcomingTasksRecyclerView: RecyclerView
-    private lateinit var scheduleRecyclerView: RecyclerView
-    private lateinit var emptyUpcomingTasks: LinearLayout
-    private lateinit var emptySchedule: LinearLayout
-    private lateinit var addTaskButton: Button
-    private lateinit var addEventButton: Button
-
-    private lateinit var upcomingTaskAdapter: UpcomingTaskAdapter
-    private lateinit var scheduleEventAdapter: ScheduleEventAdapter // Added
-
-    private val apiService: ApiService by lazy {
-        ApiClient.getInstance(this)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home)
-
-        initViews()
-        setupCurrentDate()
-        setupBottomNavigation()
-        setupListeners()
-        askNotificationPermission() // Call permission request
-        checkAndRequestExactAlarmPermission()
-
-        loadInitialData()
-    }
-
-    private fun initViews() {
-        greetingTextView = findViewById(R.id.tv_greeting)
-        dateTextView = findViewById(R.id.tv_date)
-        flowPercentageTextView = findViewById(R.id.tv_flow_percentage)
-        flowMessageTextView = findViewById(R.id.tv_flow_message) // Added
-        flowPieChart = findViewById(R.id.pie_chart_flow) // Changed
-        upcomingTasksRecyclerView = findViewById(R.id.upcoming_tasks_recyclerview)
-        scheduleRecyclerView = findViewById(R.id.schedule_recyclerview) // Changed
-        emptyUpcomingTasks = findViewById(R.id.empty_upcoming_tasks)
-        emptySchedule = findViewById(R.id.empty_schedule)
-        addTaskButton = findViewById(R.id.btn_add_task)
-        addEventButton = findViewById(R.id.btn_add_event)
-
-        // Setup RecyclerView for upcoming tasks
-        upcomingTaskAdapter = UpcomingTaskAdapter(emptyList()) { task: UpcomingTask ->
-            showTaskDetailsDialog(task)
-        }
-        upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
-        upcomingTasksRecyclerView.adapter = upcomingTaskAdapter
-
-        // Setup RecyclerView for today's schedule
-        scheduleEventAdapter = ScheduleEventAdapter(emptyList()) { event ->
-            showEventDetailsDialog(event)
-        }
-        scheduleRecyclerView.layoutManager = LinearLayoutManager(this)
-        scheduleRecyclerView.adapter = scheduleEventAdapter
-    }
-
-    private fun showEventDetailsDialog(event: ScheduleEvent) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
-        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
-            .setView(dialogView)
-            .create()
-
-        dialog.show()
-
-        val window = dialog.window
-        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
-
-        val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
-        val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)
-        val date = dialogView.findViewById<TextView>(R.id.tv_event_details_date)
-        val time = dialogView.findViewById<TextView>(R.id.tv_event_details_time)
-        val location = dialogView.findViewById<TextView>(R.id.tv_event_details_location)
-        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_event)
-        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_event)
-
-        title.text = event.title
-        notes.text = event.notes ?: "No notes available."
-        date.text = event.date
-        time.text = event.time
-        location.text = event.location ?: "No location specified."
-
-        completeButton.setOnClickListener {
-            markEventAsComplete(event.id)
-            dialog.dismiss()
-        }
-
-        deleteButton.setOnClickListener {
-            deleteEvent(event.id)
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
-    private fun markEventAsComplete(eventId: String) {
-        lifecycleScope.launch {
-            try {
-                val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
-                val response = apiService.updateEvent(eventId, request)
-                if (response.isSuccessful) {
-                    Toast.makeText(this@HomeActivity, "Event marked as complete", Toast.LENGTH_SHORT).show()
-                    loadDashboardSummary() // Refresh the data
-                } else {
-                    showError("Failed to update event: ${response.errorBody()?.string()}")
-                }
-            } catch (e: Exception) {
-                showError("Network Error: ${e.message}")
-            }
-        }
-    }
-
-    private fun deleteEvent(eventId: String) {
-        lifecycleScope.launch {
-            try {
-                val response = apiService.deleteEvent(eventId)
-                if (response.isSuccessful) {
-                    Toast.makeText(this@HomeActivity, "Event deleted", Toast.LENGTH_SHORT).show()
-                    loadDashboardSummary() // Refresh the data
-                } else {
-                    showError("Failed to delete event: ${response.errorBody()?.string()}")
-                }
-            } catch (e: Exception) {
-                showError("Network Error: ${e.message}")
-            }
-        }
-    }
-
     private fun setupCurrentDate() {
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
@@ -242,10 +133,9 @@ class HomeActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigation.selectedItemId = R.id.nav_home
-
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> true // Already on Home
+                R.id.nav_home -> true
                 R.id.nav_tasks -> {
                     startActivity(Intent(this, MyTasksActivity::class.java))
                     overridePendingTransition(0, 0)
@@ -275,7 +165,6 @@ class HomeActivity : AppCompatActivity() {
         addTaskButton.setOnClickListener {
             startActivity(Intent(this, NewTaskActivity::class.java))
         }
-
         addEventButton.setOnClickListener {
             startActivity(Intent(this, NewEventActivity::class.java))
         }
@@ -300,16 +189,13 @@ class HomeActivity : AppCompatActivity() {
                     val summary = response.body()
                     summary?.let {
                         val percentage = it.todaysFlow.percentage
-                        animatePieChart(percentage.toFloat())
+                        setupDonutChart(percentage.toFloat())
                         flowPercentageTextView.text = "$percentage%"
-
-                        // Set flow message based on percentage
                         flowMessageTextView.text = when {
                             percentage >= 80 -> "Great progress!"
                             percentage >= 50 -> "Keep going!"
                             else -> "Stay focused!"
                         }
-
                         updateUpcomingTasks(it.upcomingTasks)
                         updateTodaysSchedule(it.todaysSchedule)
                     }
@@ -320,6 +206,32 @@ class HomeActivity : AppCompatActivity() {
                 showError("Network Error: ${e.message}")
             }
         }
+    }
+    
+    private fun setupDonutChart(score: Float) {
+        pieChart.isDrawHoleEnabled = true
+        pieChart.holeRadius = 85f
+        pieChart.transparentCircleRadius = 85f
+        pieChart.setHoleColor(Color.TRANSPARENT)
+
+        pieChart.centerText = "${score.toInt()}%"
+        pieChart.setCenterTextSize(24f)
+        pieChart.setCenterTextColor(Color.BLACK)
+
+        pieChart.description.isEnabled = false
+        pieChart.legend.isEnabled = false
+
+        val entries = ArrayList<PieEntry>()
+        entries.add(PieEntry(score))
+        entries.add(PieEntry(100f - score))
+
+        val dataSet = PieDataSet(entries, "")
+        dataSet.colors = listOf(ContextCompat.getColor(this, R.color.primary_blue), ContextCompat.getColor(this, R.color.light_gray))
+        dataSet.setDrawValues(false)
+
+        val data = PieData(dataSet)
+        pieChart.data = data
+        pieChart.invalidate()
     }
 
     private fun updateUpcomingTasks(tasks: List<UpcomingTask>) {
@@ -354,12 +266,8 @@ class HomeActivity : AppCompatActivity() {
 
     private fun showTaskDetailsDialog(task: UpcomingTask) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_task_details, null)
-        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent)
-            .setView(dialogView)
-            .create()
-
+        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent).setView(dialogView).create()
         dialog.show()
-
         val window = dialog.window
         window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
 
@@ -381,13 +289,41 @@ class HomeActivity : AppCompatActivity() {
             markTaskAsComplete(task.id)
             dialog.dismiss()
         }
-
         deleteButton.setOnClickListener {
             deleteTask(task.id)
             dialog.dismiss()
         }
-
+    }
+    
+    private fun showEventDetailsDialog(event: ScheduleEvent) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_event_details, null)
+        val dialog = AlertDialog.Builder(this, R.style.AlertDialog_Transparent).setView(dialogView).create()
         dialog.show()
+        val window = dialog.window
+        window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
+
+        val title = dialogView.findViewById<TextView>(R.id.tv_event_details_title)
+        val notes = dialogView.findViewById<TextView>(R.id.tv_event_details_notes)
+        val date = dialogView.findViewById<TextView>(R.id.tv_event_details_date)
+        val time = dialogView.findViewById<TextView>(R.id.tv_event_details_time)
+        val location = dialogView.findViewById<TextView>(R.id.tv_event_details_location)
+        val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_event)
+        val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_event)
+
+        title.text = event.title
+        notes.text = event.notes ?: "No notes available."
+        date.text = event.date
+        time.text = event.time
+        location.text = event.location ?: "No location specified."
+
+        completeButton.setOnClickListener {
+            markEventAsComplete(event.id)
+            dialog.dismiss()
+        }
+        deleteButton.setOnClickListener {
+            deleteEvent(event.id)
+            dialog.dismiss()
+        }
     }
 
     private fun markTaskAsComplete(taskId: String) {
@@ -396,7 +332,7 @@ class HomeActivity : AppCompatActivity() {
                 val response = apiService.updateTask(taskId, mapOf("isCompleted" to true))
                 if (response.isSuccessful) {
                     Toast.makeText(this@HomeActivity, "Task marked as complete", Toast.LENGTH_SHORT).show()
-                    loadDashboardSummary() // Refresh the data
+                    loadDashboardSummary()
                 } else {
                     showError("Failed to update task: ${response.errorBody()?.string()}")
                 }
@@ -412,9 +348,42 @@ class HomeActivity : AppCompatActivity() {
                 val response = apiService.deleteTask(taskId)
                 if (response.isSuccessful) {
                     Toast.makeText(this@HomeActivity, "Task deleted", Toast.LENGTH_SHORT).show()
-                    loadDashboardSummary() // Refresh the data
+                    loadDashboardSummary()
                 } else {
                     showError("Failed to delete task: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
+    }
+    
+    private fun markEventAsComplete(eventId: String) {
+        lifecycleScope.launch {
+            try {
+                val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
+                val response = apiService.updateEvent(eventId, request)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HomeActivity, "Event marked as complete", Toast.LENGTH_SHORT).show()
+                    loadDashboardSummary()
+                } else {
+                    showError("Failed to update event: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun deleteEvent(eventId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.deleteEvent(eventId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HomeActivity, "Event deleted", Toast.LENGTH_SHORT).show()
+                    loadDashboardSummary()
+                } else {
+                    showError("Failed to delete event: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 showError("Network Error: ${e.message}")

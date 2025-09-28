@@ -130,7 +130,7 @@ class InsightsActivity : AppCompatActivity() {
 
     private fun resetFilters(filters: List<TextView>) {
         filters.forEach {
-            it.setBackgroundResource(android.R.color.transparent)
+            it.setBackgroundColor(ContextCompat.getColor(this, R.color.light_gray))
             it.setTextColor(ContextCompat.getColor(this, R.color.gray))
         }
     }
