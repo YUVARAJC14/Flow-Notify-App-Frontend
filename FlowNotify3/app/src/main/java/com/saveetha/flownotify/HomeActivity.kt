@@ -33,7 +33,43 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import android.animation.AnimatorSet
+import android.animation.ValueAnimator
+
+// ... other imports ...
+
 class HomeActivity : AppCompatActivity() {
+
+    // ... existing code ...
+
+    private fun animatePieChart(finalPercentage: Float) {
+        // Ensure the pie chart starts at 0 before any animation
+        flowPieChart.setPercentage(0f)
+
+        // Stage 1: Animate from 0% to 100%
+        val animatorTo100 = ValueAnimator.ofFloat(0f, 100f).apply {
+            duration = 500 // Fast sweep to 100%
+            addUpdateListener { animation ->
+                flowPieChart.setPercentage(animation.animatedValue as Float)
+            }
+        }
+
+        // Stage 2: Animate from 100% to the final percentage
+        val animatorToFinal = ValueAnimator.ofFloat(100f, finalPercentage).apply {
+            duration = 800 // Slower settle to final percentage
+            addUpdateListener { animation ->
+                flowPieChart.setPercentage(animation.animatedValue as Float)
+            }
+        }
+
+        // Chain the animations
+        AnimatorSet().apply {
+            playSequentially(animatorTo100, animatorToFinal)
+            start()
+        }
+    }
+
+    // ... rest of the class ...
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -264,7 +300,7 @@ class HomeActivity : AppCompatActivity() {
                     val summary = response.body()
                     summary?.let {
                         val percentage = it.todaysFlow.percentage
-                        flowPieChart.setPercentage(percentage.toFloat()) // Changed
+                        animatePieChart(percentage.toFloat())
                         flowPercentageTextView.text = "$percentage%"
 
                         // Set flow message based on percentage

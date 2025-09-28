@@ -35,6 +35,7 @@
         <item name="android:colorAccent">@color/primary_blue</item> <!-- For older Android versions -->
         <item name="android:dateTextAppearance">@style/CustomDateTextAppearance</item>
         <item name="android:weekDayTextAppearance">@style/CustomWeekDayTextAppearance</item>
+        <item name="android:selectedWeekBackgroundColor">@color/primary_blue</item>
     </style>
 
     <style name="CustomDateTextAppearance" parent="TextAppearance.AppCompat.Small">
