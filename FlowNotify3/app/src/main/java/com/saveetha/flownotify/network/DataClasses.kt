@@ -109,6 +109,7 @@ data class ScheduleEvent(
 )
 
 data class EventUpdateRequest(
+    @SerializedName("isCompleted")
     val completed: Boolean
 )
 
