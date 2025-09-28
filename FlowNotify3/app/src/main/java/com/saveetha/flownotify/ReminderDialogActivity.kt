@@ -60,13 +60,8 @@ class ReminderDialogActivity : AppCompatActivity() {
     private fun markEventAsComplete(eventId: String) {
         lifecycleScope.launch {
             try {
-                val eventIdInt = eventId.toIntOrNull()
-                if (eventIdInt == null) {
-                    showError("Invalid event ID")
-                    return@launch
-                }
                 val request = EventUpdateRequest(completed = true)
-                val response = apiService.updateEvent(eventIdInt, request)
+                val response = apiService.updateEvent(eventId, request)
                 if (!response.isSuccessful) {
                     showError("Failed to update event")
                 }

@@ -166,13 +166,8 @@ class HomeActivity : AppCompatActivity() {
     private fun markEventAsComplete(eventId: String) {
         lifecycleScope.launch {
             try {
-                val eventIdInt = eventId.toIntOrNull()
-                if (eventIdInt == null) {
-                    showError("Invalid event ID")
-                    return@launch
-                }
                 val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
-                val response = apiService.updateEvent(eventIdInt, request)
+                val response = apiService.updateEvent(eventId, request)
                 if (response.isSuccessful) {
                     Toast.makeText(this@HomeActivity, "Event marked as complete", Toast.LENGTH_SHORT).show()
                     loadDashboardSummary() // Refresh the data
@@ -188,12 +183,7 @@ class HomeActivity : AppCompatActivity() {
     private fun deleteEvent(eventId: String) {
         lifecycleScope.launch {
             try {
-                val eventIdInt = eventId.toIntOrNull()
-                if (eventIdInt == null) {
-                    showError("Invalid event ID")
-                    return@launch
-                }
-                val response = apiService.deleteEvent(eventIdInt)
+                val response = apiService.deleteEvent(eventId)
                 if (response.isSuccessful) {
                     Toast.makeText(this@HomeActivity, "Event deleted", Toast.LENGTH_SHORT).show()
                     loadDashboardSummary() // Refresh the data

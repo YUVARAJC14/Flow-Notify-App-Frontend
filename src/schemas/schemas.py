@@ -177,7 +177,7 @@ class EventCreate(EventBase):
 
 
 class Event(EventBase):
-    id: int
+    id: str
     owner_id: str
     model_config = ConfigDict(from_attributes=True)
 

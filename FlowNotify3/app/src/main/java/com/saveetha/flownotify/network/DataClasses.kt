@@ -64,7 +64,7 @@ data class CreateEventRequest(
 )
 
 data class Event(
-    val id: Int,
+    val id: String,
     val title: String,
     val date: String,
     val startTime: String,

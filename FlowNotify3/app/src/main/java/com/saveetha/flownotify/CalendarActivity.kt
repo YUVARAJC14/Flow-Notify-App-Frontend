@@ -250,7 +250,7 @@ class CalendarActivity : AppCompatActivity() {
         }
     }
 
-    private fun markEventAsComplete(eventId: Int) {
+    private fun markEventAsComplete(eventId: String) {
         lifecycleScope.launch {
             try {
                 val request = com.saveetha.flownotify.network.EventUpdateRequest(completed = true)
@@ -267,7 +267,7 @@ class CalendarActivity : AppCompatActivity() {
         }
     }
 
-    private fun deleteEvent(eventId: Int) {
+    private fun deleteEvent(eventId: String) {
         lifecycleScope.launch {
             try {
                 val response = apiService.deleteEvent(eventId)

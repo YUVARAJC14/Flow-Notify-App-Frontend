@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from ..database.base import Base
 import enum
+import uuid
 
 class CategoryEnum(str, enum.Enum):
     work = "Work"
@@ -13,7 +14,7 @@ class CategoryEnum(str, enum.Enum):
 class Event(Base):
     __tablename__ = "events"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     title = Column(String, index=True)
     location = Column(String, nullable=True)
     start_datetime = Column(DateTime)

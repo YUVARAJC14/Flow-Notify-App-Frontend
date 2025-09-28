@@ -52,8 +52,8 @@ interface ApiService {
     suspend fun deleteTask(@Path("taskId") taskId: String): Response<Unit>
 
     @PUT("api/events/{eventId}")
-    suspend fun updateEvent(@Path("eventId") eventId: Int, @Body body: EventUpdateRequest): Response<Event>
+    suspend fun updateEvent(@Path("eventId") eventId: String, @Body body: EventUpdateRequest): Response<Event>
 
     @DELETE("api/events/{eventId}")
-    suspend fun deleteEvent(@Path("eventId") eventId: Int): Response<Unit>
+    suspend fun deleteEvent(@Path("eventId") eventId: String): Response<Unit>
 }
