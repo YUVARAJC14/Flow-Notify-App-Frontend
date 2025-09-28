@@ -175,15 +175,30 @@ def get_insights(db: Session, user_id: str, period: str):
 
     # Task Completion
     task_completion = []
-    if period == "week":
+    if period == "day":
+        tasks = crud.get_tasks_by_date(db, user_id, today)
+        completed = sum(1 for task in tasks if task.completed)
+        task_completion.append({"label": today.strftime("%a"), "completed": completed, "total": len(tasks)})
+    elif period == "week":
         for i in range(7):
             day = start_date + timedelta(days=i)
             tasks = crud.get_tasks_by_date(db, user_id, day)
             completed = sum(1 for task in tasks if task.completed)
             task_completion.append({"label": day.strftime("%a"), "completed": completed, "total": len(tasks)})
-    else: # month or year
-        # Simplified for brevity
-        pass
+    elif period == "month":
+        for i in range(4):
+            week_start = start_date + timedelta(weeks=i)
+            week_end = week_start + timedelta(days=6)
+            tasks = crud.get_tasks_by_date_range(db, user_id, week_start, week_end)
+            completed = sum(1 for task in tasks if task.completed)
+            task_completion.append({"label": f"Week {i+1}", "completed": completed, "total": len(tasks)})
+    elif period == "year":
+        for i in range(1, 13):
+            month_start = today.replace(month=i, day=1)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            tasks = crud.get_tasks_by_date_range(db, user_id, month_start, month_end)
+            completed = sum(1 for task in tasks if task.completed)
+            task_completion.append({"label": month_start.strftime("%b"), "completed": completed, "total": len(tasks)})
 
     # Productive Times
     productive_times = []

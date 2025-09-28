@@ -12,11 +12,15 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.saveetha.flownotify.network.ActivitySummaryResponse
@@ -30,7 +34,8 @@ import retrofit2.HttpException
 
 class InsightsActivity : AppCompatActivity() {
 
-    private lateinit var barChart: BarChart
+    private lateinit var lineChart: LineChart
+    private lateinit var pieChart: PieChart
     private lateinit var heatmapContainer: LinearLayout
     private lateinit var filterDay: TextView
     private lateinit var filterWeek: TextView
@@ -38,7 +43,6 @@ class InsightsActivity : AppCompatActivity() {
     private lateinit var filterYear: TextView
     private lateinit var flowScoreTextView: TextView
     private lateinit var flowScoreMessageTextView: TextView
-    private lateinit var flowPieChart: PieChartView
     private lateinit var tvActivitySummary: TextView // New TextView for summary
 
     private val apiService: ApiService by lazy {
@@ -56,7 +60,8 @@ class InsightsActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        barChart = findViewById(R.id.bar_chart_task_completion)
+        lineChart = findViewById(R.id.line_chart_task_completion)
+        pieChart = findViewById(R.id.pie_chart_flow)
         heatmapContainer = findViewById(R.id.heatmap_container)
         filterDay = findViewById(R.id.filter_day)
         filterWeek = findViewById(R.id.filter_week)
@@ -64,7 +69,6 @@ class InsightsActivity : AppCompatActivity() {
         filterYear = findViewById(R.id.filter_year)
         flowScoreTextView = findViewById(R.id.tv_flow_score)
         flowScoreMessageTextView = findViewById(R.id.tv_flow_score_message)
-        flowPieChart = findViewById(R.id.pie_chart_flow)
         tvActivitySummary = findViewById(R.id.tv_activity_summary) // Initialize new TextView
     }
 
@@ -142,18 +146,8 @@ class InsightsActivity : AppCompatActivity() {
                     val summary = summaryResponse.body()
 
                     insights?.let {
-                        val scoreInt = it.flowScore.score.toInt()
-                        flowScoreTextView.text = "$scoreInt%"
-                        flowPieChart.setPercentage(it.flowScore.score)
-
-                        flowScoreMessageTextView.text = when {
-                            scoreInt >= 80 -> "Excellent flow! Keep up the great work."
-                            scoreInt >= 60 -> "Good flow! You're on track."
-                            scoreInt >= 40 -> "Steady progress. Aim for higher flow."
-                            else -> "Let's boost your flow! Focus on key tasks."
-                        }
-
-                        setupBarChart(it.taskCompletion)
+                        setupDonutChart(it.flowScore.score)
+                        setupLineChart(it.taskCompletion)
                         setupHeatmap(it.productiveTimes)
                     }
                     summary?.let {
@@ -174,35 +168,61 @@ class InsightsActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupBarChart(taskCompletion: List<TaskCompletion>) {
-        val entries = ArrayList<BarEntry>()
+    private fun setupDonutChart(score: Float) {
+        pieChart.isDrawHoleEnabled = true
+        pieChart.holeRadius = 75f
+        pieChart.transparentCircleRadius = 80f
+        pieChart.setHoleColor(Color.TRANSPARENT)
+
+        pieChart.centerText = "${score.toInt()}%"
+        pieChart.setCenterTextSize(24f)
+        pieChart.setCenterTextColor(Color.BLACK)
+
+        pieChart.description.isEnabled = false
+        pieChart.legend.isEnabled = false
+
+        val entries = ArrayList<PieEntry>()
+        entries.add(PieEntry(score))
+        entries.add(PieEntry(100f - score))
+
+        val dataSet = PieDataSet(entries, "")
+        dataSet.colors = listOf(ContextCompat.getColor(this, R.color.primary_blue), ContextCompat.getColor(this, R.color.light_gray))
+        dataSet.setDrawValues(false)
+
+        val data = PieData(dataSet)
+        pieChart.data = data
+        pieChart.invalidate()
+    }
+
+    private fun setupLineChart(taskCompletion: List<TaskCompletion>) {
+        val entries = ArrayList<Entry>()
         val labels = ArrayList<String>()
 
         taskCompletion.forEachIndexed { index, completion ->
-            entries.add(BarEntry(index.toFloat(), completion.completed.toFloat()))
+            entries.add(Entry(index.toFloat(), completion.completed.toFloat()))
             labels.add(completion.label)
         }
 
-        val dataSet = BarDataSet(entries, "Tasks Completed")
-        dataSet.color = ContextCompat.getColor(this, R.color.green)
+        val dataSet = LineDataSet(entries, "Tasks Completed")
+        dataSet.color = ContextCompat.getColor(this, R.color.primary_blue)
+        dataSet.setCircleColor(ContextCompat.getColor(this, R.color.primary_blue))
         dataSet.setDrawValues(false)
+        dataSet.setDrawFilled(true)
+        dataSet.fillColor = ContextCompat.getColor(this, R.color.primary_blue)
+        dataSet.fillAlpha = 50
 
-        val data = BarData(dataSet)
-        data.barWidth = 0.6f
-
-        barChart.data = data
+        val data = LineData(dataSet)
+        lineChart.data = data
 
         // Style the chart
-        barChart.description.isEnabled = false
-        barChart.legend.isEnabled = false
-        barChart.setDrawGridBackground(false)
-        barChart.setDrawBarShadow(false)
-        barChart.setScaleEnabled(false)
-        barChart.setPinchZoom(false)
-        barChart.setDrawValueAboveBar(false)
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.setDrawGridBackground(false)
+        lineChart.setScaleEnabled(false)
+        lineChart.setPinchZoom(false)
 
         // Style X axis
-        val xAxis = barChart.xAxis
+        val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(false)
         xAxis.setDrawAxisLine(true)
@@ -211,29 +231,27 @@ class InsightsActivity : AppCompatActivity() {
         xAxis.granularity = 1f
 
         // Style Y axis
-        val leftAxis = barChart.axisLeft
+        val leftAxis = lineChart.axisLeft
         leftAxis.setDrawGridLines(true)
         leftAxis.gridColor = Color.parseColor("#E0E0E0")
         leftAxis.setDrawAxisLine(true)
         leftAxis.axisMinimum = 0f
-        leftAxis.setLabelCount(5, true) // Show 5 labels, force integers
+        leftAxis.setLabelCount(5, true)
         leftAxis.axisLineColor = Color.parseColor("#E0E0E0")
         leftAxis.textColor = Color.parseColor("#757575")
         leftAxis.textSize = 10f
-        leftAxis.axisMaximum = (taskCompletion.maxOfOrNull { it.total }?.toFloat() ?: 10f) * 1.2f // Dynamic max
-        leftAxis.setDrawLabels(true)
         leftAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
             override fun getFormattedValue(value: Float): String {
                 return value.toInt().toString()
             }
         }
 
-        val rightAxis = barChart.axisRight
+        val rightAxis = lineChart.axisRight
         rightAxis.isEnabled = false
 
         // Animate and refresh
-        barChart.animateY(500)
-        barChart.invalidate()
+        lineChart.animateY(500)
+        lineChart.invalidate()
     }
 
     private fun setupHeatmap(productiveTimes: List<com.saveetha.flownotify.network.ProductiveTime>) {
