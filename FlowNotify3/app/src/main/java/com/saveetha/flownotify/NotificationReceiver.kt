@@ -7,12 +7,11 @@ import android.content.Intent
 class NotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val dialogIntent = Intent(context, ReminderDialogActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("title", intent.getStringExtra("title"))
-            putExtra("type", intent.getStringExtra("type"))
-            putExtra("id", intent.getStringExtra("id"))
-        }
-        context.startActivity(dialogIntent)
+        val title = intent.getStringExtra("title") ?: "Reminder"
+        val message = intent.getStringExtra("message") ?: "You have a new notification."
+
+        val notificationHelper = NotificationHelper(context)
+        notificationHelper.createNotificationChannel()
+        notificationHelper.showNotification(title, message)
     }
 }

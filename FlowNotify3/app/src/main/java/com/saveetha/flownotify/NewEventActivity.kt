@@ -331,7 +331,7 @@ class NewEventActivity : AppCompatActivity() {
                                 set(Calendar.MINUTE, startTimeMinute)
                                 add(Calendar.MINUTE, -reminderMinutes)
                             }
-                            NotificationScheduler.scheduleNotification(this@NewEventActivity, calendar.timeInMillis, newEvent.id.toString(), "Event", newEvent.title)
+                            NotificationScheduler.scheduleNotification(this@NewEventActivity, calendar.timeInMillis, newEvent.id, "Event", newEvent.title)
                         }
 
                         val resultIntent = Intent()

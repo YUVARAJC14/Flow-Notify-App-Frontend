@@ -51,7 +51,7 @@ class OnboardingActivity : AppCompatActivity() {
                 viewPager.currentItem += 1
             } else {
                 // Navigate to the next activity after onboarding is finished
-                val intent = Intent(this, NameInputActivity::class.java)
+                val intent = Intent(this, LoginActivity::class.java)
                 startActivity(intent)
                 finish()
             }
