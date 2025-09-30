@@ -64,16 +64,35 @@ class KanbanActivity : AppCompatActivity() {
 
         val title = dialogView.findViewById<TextView>(R.id.tv_task_details_title)
         val description = dialogView.findViewById<TextView>(R.id.tv_task_details_description)
+        val dueDate = dialogView.findViewById<TextView>(R.id.tv_task_details_due_date)
+        val dueTime = dialogView.findViewById<TextView>(R.id.tv_task_details_due_time)
+        val priorityLabel = dialogView.findViewById<TextView>(R.id.tv_task_details_priority)
+        val priorityIcon = dialogView.findViewById<android.widget.ImageView>(R.id.iv_priority_icon)
         val completeButton = dialogView.findViewById<Button>(R.id.btn_complete_task)
         val deleteButton = dialogView.findViewById<Button>(R.id.btn_delete_task)
-        deleteButton.visibility = View.GONE // Hide delete button for now
 
         if (card.task != null) {
             title.text = card.task.title
             description.text = card.task.description ?: "No description available."
+            dueDate.text = card.task.dueDate ?: "No date"
+            dueTime.text = card.task.time ?: "No time"
+            priorityLabel.text = card.task.priority
+            priorityIcon.setImageResource(R.drawable.ic_flag)
         } else if (card.event != null) {
             title.text = card.event.title
             description.text = card.event.notes ?: "No notes available."
+            dueDate.text = card.event.date
+            dueTime.text = "${card.event.startTime} - ${card.event.endTime}"
+            // Repurpose priority field for location
+            if (card.event.location.isNullOrEmpty()) {
+                priorityLabel.visibility = View.GONE
+                priorityIcon.visibility = View.GONE
+            } else {
+                priorityLabel.visibility = View.VISIBLE
+                priorityIcon.visibility = View.VISIBLE
+                priorityIcon.setImageResource(R.drawable.ic_location)
+                priorityLabel.text = card.event.location
+            }
         }
 
         completeButton.setOnClickListener {
@@ -81,7 +100,35 @@ class KanbanActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
+        deleteButton.setOnClickListener {
+            handleCardDeletion(card)
+            dialog.dismiss()
+        }
+
         dialog.show()
+    }
+
+    private fun handleCardDeletion(card: KanbanCard) {
+        lifecycleScope.launch {
+            try {
+                val isSuccess = if (card.task != null) {
+                    apiService.deleteTask(card.task.id).isSuccessful
+                } else if (card.event != null) {
+                    apiService.deleteEvent(card.event.id).isSuccessful
+                } else {
+                    false
+                }
+
+                if (isSuccess) {
+                    Toast.makeText(this@KanbanActivity, "Item deleted", Toast.LENGTH_SHORT).show()
+                    loadKanbanData() // Refresh the board
+                } else {
+                    showError("Failed to delete item.")
+                }
+            } catch (e: Exception) {
+                showError("Network Error: ${e.message}")
+            }
+        }
     }
 
     private fun handleCardCompletion(card: KanbanCard) {
@@ -178,7 +225,7 @@ class KanbanActivity : AppCompatActivity() {
 
                 // Check if the item is scheduled to start within the next 30 minutes
                 val diffMillis = itemCalendar.timeInMillis - now.timeInMillis
-                if (diffMillis in 1..30 * 60 * 1000) { // 1ms to 30 minutes
+                if (diffMillis in 1..60 * 60 * 1000) { // 1ms to 60 minutes
                     cardsToMove.add(card)
                 }
 
