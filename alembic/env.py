@@ -10,6 +10,7 @@ from src.database.base import Base # Import Base
 from src.auth import models as auth_models
 from src.tasks import models as task_models
 from src.events import models as event_models
+from src.kanban import models as kanban_models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -36,7 +36,6 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_profile)
 
         initViews()
-        setupBottomNavigation()
         setupListeners()
 
         fetchUserData()
@@ -50,37 +49,7 @@ class ProfileActivity : AppCompatActivity() {
         logoutButton = findViewById(R.id.btn_log_out)
     }
 
-    private fun setupBottomNavigation() {
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        bottomNavigation.selectedItemId = R.id.nav_profile
 
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    startActivity(Intent(this, HomeActivity::class.java))
-                    overridePendingTransition(0, 0)
-                    true
-                }
-                R.id.nav_tasks -> {
-                    startActivity(Intent(this, MyTasksActivity::class.java))
-                    overridePendingTransition(0, 0)
-                    true
-                }
-                R.id.nav_calendar -> {
-                    startActivity(Intent(this, CalendarActivity::class.java))
-                    overridePendingTransition(0, 0)
-                    true
-                }
-                R.id.nav_insights -> {
-                    startActivity(Intent(this, InsightsActivity::class.java))
-                    overridePendingTransition(0, 0)
-                    true
-                }
-                R.id.nav_profile -> true // Already on Profile
-                else -> false
-            }
-        }
-    }
 
     private fun setupListeners() {
         findViewById<Button>(R.id.btn_edit_profile).setOnClickListener {

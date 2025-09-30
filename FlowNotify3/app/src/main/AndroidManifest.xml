@@ -87,6 +87,9 @@
             android:name=".MyTasksActivity"
             android:exported="true" />
         <activity
+            android:name=".KanbanActivity"
+            android:exported="false" />
+        <activity
             android:name=".NewTaskActivity"
             android:exported="false" />
         <activity

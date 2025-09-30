@@ -68,4 +68,13 @@ interface ApiService {
 
     @DELETE("api/events/{eventId}")
     suspend fun deleteEvent(@Path("eventId") eventId: String): Response<Unit>
+
+    @GET("api/kanban/boards")
+    suspend fun getKanbanBoards(): Response<List<KanbanBoard>>
+
+    @PATCH("api/kanban/cards/{cardId}/move")
+    suspend fun moveKanbanCard(
+        @Path("cardId") cardId: String,
+        @Body moveRequest: KanbanCardMoveRequest
+    ): Response<Unit>
 }

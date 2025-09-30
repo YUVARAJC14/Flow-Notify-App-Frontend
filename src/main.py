@@ -13,6 +13,7 @@ from src.dashboard.router import router as dashboard_router
 from src.events.router import router as events_router
 from src.insights.router import router as insights_router
 from src.feedback.router import router as feedback_router # New import
+from src.kanban.router import router as kanban_router
 
 from .security import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,6 +54,7 @@ def create_app():
     api_router.include_router(events_router)
     api_router.include_router(insights_router)
     api_router.include_router(feedback_router) # Include new feedback router
+    api_router.include_router(kanban_router)
 
     app.include_router(auth_router_container)
     app.include_router(api_router)

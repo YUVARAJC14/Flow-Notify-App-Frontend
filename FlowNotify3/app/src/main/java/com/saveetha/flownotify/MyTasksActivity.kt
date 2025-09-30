@@ -119,8 +119,8 @@ class MyTasksActivity : AppCompatActivity() {
                     overridePendingTransition(0, 0)
                     true
                 }
-                R.id.nav_profile -> {
-                    startActivity(Intent(this, ProfileActivity::class.java))
+                R.id.nav_boards -> {
+                    startActivity(Intent(this, KanbanActivity::class.java))
                     overridePendingTransition(0, 0)
                     true
                 }

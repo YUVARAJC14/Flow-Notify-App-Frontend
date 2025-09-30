@@ -37,4 +37,5 @@
     <string name="twitter">Twitter</string>
     <string name="copy">Copy to clipboard</string>
     <string name="call">Call</string>
+    <string name="menu">Call</string>
 </resources>

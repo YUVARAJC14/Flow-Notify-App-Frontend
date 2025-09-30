@@ -17,7 +17,7 @@
         android:icon="@drawable/ic_insights"
         android:title="Insights" />
     <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/ic_profile"
-        android:title="Profile" />
+        android:id="@+id/nav_boards"
+        android:icon="@drawable/ic_kanban_board"
+        android:title="Boards" />
 </menu>

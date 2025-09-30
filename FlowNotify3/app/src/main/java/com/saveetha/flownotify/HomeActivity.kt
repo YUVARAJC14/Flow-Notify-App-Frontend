@@ -16,6 +16,8 @@ import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,6 +62,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var emptySchedule: LinearLayout
     private lateinit var addTaskButton: Button
     private lateinit var addEventButton: Button
+    private lateinit var overflowMenu: ImageView
 
     private lateinit var upcomingTaskAdapter: UpcomingTaskAdapter
     private lateinit var scheduleEventAdapter: ScheduleEventAdapter
@@ -93,6 +96,7 @@ class HomeActivity : AppCompatActivity() {
         emptySchedule = findViewById(R.id.empty_schedule)
         addTaskButton = findViewById(R.id.btn_add_task)
         addEventButton = findViewById(R.id.btn_add_event)
+        overflowMenu = findViewById(R.id.iv_overflow_menu)
 
         upcomingTaskAdapter = UpcomingTaskAdapter(emptyList()) { task -> showTaskDetailsDialog(task) }
         upcomingTasksRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -151,8 +155,8 @@ class HomeActivity : AppCompatActivity() {
                     overridePendingTransition(0, 0)
                     true
                 }
-                R.id.nav_profile -> {
-                    startActivity(Intent(this, ProfileActivity::class.java))
+                R.id.nav_boards -> {
+                    startActivity(Intent(this, KanbanActivity::class.java))
                     overridePendingTransition(0, 0)
                     true
                 }
@@ -168,6 +172,24 @@ class HomeActivity : AppCompatActivity() {
         addEventButton.setOnClickListener {
             startActivity(Intent(this, NewEventActivity::class.java))
         }
+        overflowMenu.setOnClickListener { view ->
+            showOverflowMenu(view)
+        }
+    }
+
+    private fun showOverflowMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menuInflater.inflate(R.menu.home_overflow_menu, popup.menu)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_profile -> {
+                    startActivity(Intent(this, ProfileActivity::class.java))
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
     }
 
     private fun loadInitialData() {
