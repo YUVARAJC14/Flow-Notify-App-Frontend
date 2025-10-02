@@ -22,6 +22,7 @@ class User(Base):
     hashed_password = Column(String)
     email = Column(String, unique=True, index=True, nullable=False)
     profile_picture_url = Column(String, nullable=True)
+    bio = Column(String, nullable=True)
     theme = Column(String, default="light")
     language = Column(String, default="en")
     email_notifications_enabled = Column(Boolean, default=True)

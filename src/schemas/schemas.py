@@ -20,6 +20,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: str
     name: str
+    bio: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -48,6 +49,7 @@ class UserProfileUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     profile_picture_url: Optional[str] = None
+    bio: Optional[str] = None
 
 class UserNameUpdate(BaseModel):
     name: str
