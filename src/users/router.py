@@ -16,14 +16,6 @@ router = APIRouter(
 def get_user_profile(current_user: auth_models.User = Depends(get_current_user)):
     return current_user
 
-@router.put("/me", response_model=schemas_all.UserResponse)
-def update_user_profile(
-    profile_update: schemas_all.UserProfileUpdate,
-    db: Session = Depends(get_db),
-    current_user: auth_models.User = Depends(get_current_user)
-):
-    return crud.update_user_profile(db, current_user, profile_update)
-
 @router.put("/me/password", status_code=status.HTTP_200_OK)
 def change_password(
     password_change: schemas_all.PasswordChange,

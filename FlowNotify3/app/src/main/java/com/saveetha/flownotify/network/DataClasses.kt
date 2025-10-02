@@ -26,7 +26,9 @@ data class LoginResponse(
 data class User(
     val id: String,
     val name: String,
-    val email: String
+    val email: String,
+    val bio: String? = null,
+    val profilePictureUrl: String? = null
 )
 
 data class CreateTaskRequest(

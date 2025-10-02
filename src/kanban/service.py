@@ -2,71 +2,106 @@ from sqlalchemy.orm import Session, joinedload
 from . import models
 from src.tasks.models import Task
 from src.events.models import Event
+from sqlalchemy import and_
+from datetime import datetime, timedelta
 
 def get_boards_by_user(db: Session, user_id: str):
-    # Eagerly load columns and cards to prevent multiple queries
+    # Eagerly load the entire board structure
     board = db.query(models.KanbanBoard).options(
         joinedload(models.KanbanBoard.columns).joinedload(models.KanbanColumn.cards)
     ).filter(models.KanbanBoard.owner_id == user_id).first()
 
-    # If no board exists, create a default one
+    # 1. SETUP: Create board and default columns if they don't exist
     if not board:
-        new_board = models.KanbanBoard(name="My Board", owner_id=user_id)
-        db.add(new_board)
-        db.flush()
-        todo_column = models.KanbanColumn(name="To Do", position=0, board_id=new_board.id)
-        inprogress_column = models.KanbanColumn(name="In Progress", position=1, board_id=new_board.id)
-        done_column = models.KanbanColumn(name="Done", position=2, board_id=new_board.id)
-        db.add_all([todo_column, inprogress_column, done_column])
+        board = models.KanbanBoard(name="My Board", owner_id=user_id)
+        db.add(board)
+        db.flush() # Ensure board.id is available
+        db.add_all([
+            models.KanbanColumn(name="To Do", position=0, board_id=board.id),
+            models.KanbanColumn(name="In Progress", position=1, board_id=board.id),
+            models.KanbanColumn(name="Done", position=2, board_id=board.id)
+        ])
         db.commit()
-        # Re-query to get the full board structure
+        # Re-query to get the newly created structure
         board = db.query(models.KanbanBoard).options(
             joinedload(models.KanbanBoard.columns).joinedload(models.KanbanColumn.cards)
         ).filter(models.KanbanBoard.owner_id == user_id).first()
 
-    # Find the "To Do" column
-    todo_column = next((col for col in board.columns if col.name == "To Do"), None)
-    if not todo_column:
-        # If for some reason "To Do" column is missing, create it
-        todo_column = models.KanbanColumn(name="To Do", position=0, board_id=board.id)
-        db.add(todo_column)
-        db.commit()
-        db.refresh(todo_column)
+    todo_col = next((c for c in board.columns if c.name == 'To Do'), None)
+    inprogress_col = next((c for c in board.columns if c.name == 'In Progress'), None)
+    done_col = next((c for c in board.columns if c.name == 'Done'), None)
 
-    # Sync new tasks and events
-    existing_card_task_ids = {card.task_id for col in board.columns for card in col.cards if card.task_id}
-    existing_card_event_ids = {card.event_id for col in board.columns for card in col.cards if card.event_id}
+    # This should ideally not happen after the setup block, but as a safeguard:
+    if not all([todo_col, inprogress_col, done_col]):
+        # Handle missing default columns if necessary
+        # For now, we'll assume the initial setup is sufficient.
+        pass
 
-    new_tasks = db.query(Task).filter(
-        Task.owner_id == user_id, 
-        Task.completed == False, 
-        ~Task.id.in_(existing_card_task_ids)
-    ).all()
+    # 2. STATE CALCULATION: Determine the correct state for all items
+    all_user_tasks = db.query(Task).filter(Task.owner_id == user_id).all()
+    all_user_events = db.query(Event).filter(Event.owner_id == user_id).all()
+    all_items = all_user_tasks + all_user_events
 
-    new_events = db.query(Event).filter(
-        Event.owner_id == user_id, 
-        Event.completed == False, 
-        ~Event.id.in_(existing_card_event_ids)
-    ).all()
+    cards_by_item_id = {
+        card.task_id or card.event_id: card for col in board.columns for card in col.cards
+    }
 
-    card_position = len(todo_column.cards)
+    now = datetime.now()
+    one_hour_from_now = now + timedelta(hours=1)
     needs_commit = False
 
-    for task in new_tasks:
-        new_card = models.KanbanCard(position=card_position, column_id=todo_column.id, task_id=task.id)
-        db.add(new_card)
-        card_position += 1
-        needs_commit = True
+    for item in all_items:
+        target_col = todo_col
+        item_due_time = None
 
-    for event in new_events:
-        new_card = models.KanbanCard(position=card_position, column_id=todo_column.id, event_id=event.id)
-        db.add(new_card)
-        card_position += 1
-        needs_commit = True
+        if isinstance(item, Task) and item.due_date:
+            item_due_time = datetime.combine(item.due_date, item.due_time or datetime.min.time())
+        elif isinstance(item, Event):
+            item_due_time = item.start_datetime
+
+        if item.completed:
+            target_col = done_col
+        elif item_due_time and now <= item_due_time < one_hour_from_now:
+            target_col = inprogress_col
+        
+        card = cards_by_item_id.get(str(item.id))
+
+        if card:
+            if card.column_id != target_col.id:
+                card.column_id = target_col.id
+                # Position will be re-calculated later
+                needs_commit = True
+            # Mark this card as processed
+            cards_by_item_id.pop(str(item.id), None)
+        else: # New item, create a card
+            new_card = models.KanbanCard(
+                column_id=target_col.id,
+                task_id=str(item.id) if isinstance(item, Task) else None,
+                event_id=str(item.id) if isinstance(item, Event) else None,
+                position=0 # Placeholder position
+            )
+            db.add(new_card)
+            needs_commit = True
+
+    # 3. CLEANUP: Remove cards for deleted items
+    if cards_by_item_id: # Any cards left in the dict are for deleted items
+        for card_id_to_delete in cards_by_item_id.values():
+            db.delete(card_id_to_delete)
+            needs_commit = True
 
     if needs_commit:
         db.commit()
-        # Re-fetch the entire board to get the most up-to-date state with all relationships loaded
+
+    # 4. RE-ORDER: Normalize positions in all columns
+    for col in board.columns:
+        for i, card in enumerate(sorted(col.cards, key=lambda c: c.position)):
+            if card.position != i:
+                card.position = i
+                needs_commit = True
+
+    if needs_commit:
+        db.commit()
+        # Re-fetch the final state of the board
         board = db.query(models.KanbanBoard).options(
             joinedload(models.KanbanBoard.columns).joinedload(models.KanbanColumn.cards)
         ).filter(models.KanbanBoard.owner_id == user_id).first()
@@ -74,16 +109,40 @@ def get_boards_by_user(db: Session, user_id: str):
     return [board] if board else []
 
 def move_card(db: Session, card_id: str, new_column_id: str, new_position: int):
-    card = db.query(models.KanbanCard).filter(models.KanbanCard.id == card_id).first()
-    if not card:
+    card_to_move = db.query(models.KanbanCard).filter(models.KanbanCard.id == card_id).first()
+    if not card_to_move:
         return None
 
-    # Logic to re-order other cards in the old and new columns might be needed here
-    # For now, just update the card's column and position
-    card.column_id = new_column_id
-    card.position = new_position
+    old_column_id = card_to_move.column_id
+    old_position = card_to_move.position
+
+    # Remove card from old column and shift positions
+    if old_column_id != new_column_id:
+        old_column_cards = db.query(models.KanbanCard).filter(
+            models.KanbanCard.column_id == old_column_id,
+            models.KanbanCard.id != card_id
+        ).order_by(models.KanbanCard.position).all()
+        for i, card in enumerate(old_column_cards):
+            if card.position > old_position:
+                card.position -= 1
+
+    # Add card to new column and shift positions
+    new_column_cards = db.query(models.KanbanCard).filter(
+        models.KanbanCard.column_id == new_column_id,
+        models.KanbanCard.id != card_id
+    ).order_by(models.KanbanCard.position).all()
+
+    # Make space for the moved card
+    for card in new_column_cards:
+        if card.position >= new_position:
+            card.position += 1
+    
+    # Update the card itself
+    card_to_move.column_id = new_column_id
+    card_to_move.position = new_position
+
     db.commit()
-    db.refresh(card)
-    return card
+    db.refresh(card_to_move)
+    return card_to_move
 
 # More business logic will be added here

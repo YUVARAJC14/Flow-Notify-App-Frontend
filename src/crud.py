@@ -188,11 +188,13 @@ def get_tasks_by_date_range(db: Session, user_id: int, start_date: date, end_dat
     ).all()
 
 def get_completed_tasks_by_date_range(db: Session, user_id: int, start_date: date, end_date: date):
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
     return db.query(task_models.Task).filter(
         task_models.Task.owner_id == user_id,
         task_models.Task.completed == True,
-        task_models.Task.completed_at >= start_date,
-        task_models.Task.completed_at <= end_date
+        task_models.Task.completed_at >= start_datetime,
+        task_models.Task.completed_at <= end_datetime
     ).all()
 
 def get_today_progress(db: Session, user_id: int) -> float:
@@ -373,11 +375,13 @@ def get_events_by_month(db: Session, user_id: int, year: int, month: int):
     ).all()
 
 def get_completed_events_by_date_range(db: Session, user_id: str, start_date: date, end_date: date):
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
     return db.query(event_models.Event).filter(
         event_models.Event.owner_id == user_id,
         event_models.Event.completed == True,
-        event_models.Event.start_datetime >= start_date,
-        event_models.Event.start_datetime <= end_date
+        event_models.Event.start_datetime >= start_datetime,
+        event_models.Event.start_datetime <= end_datetime
     ).all()
 
 def get_events_by_date(db: Session, user_id: int, event_date: date):
