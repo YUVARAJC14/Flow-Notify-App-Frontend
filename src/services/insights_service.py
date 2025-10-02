@@ -208,7 +208,36 @@ def get_insights(db: Session, user_id: str, period: str):
             productive_times.append({"day": task.completed_at.weekday(), "hour": task.completed_at.hour, "intensity": 0.5})
 
     return {
-        "flowScore": {"score": int(current_flow), "comparison": {"change": int(flow_change), "period": f"last {period}"}},
+        "flowScore": {
+            "score": int(current_flow),
+            "comparison": {
+                "change": int(flow_change),
+                "period": f"last {period}"
+            }
+        },
         "taskCompletion": task_completion,
         "productiveTimes": productive_times
+    }
+
+def get_daily_insights(db: Session, user_id: str, date: date):
+    # Flow Score
+    completion_weight = 0.85
+    timeliness_weight = 0.15
+    flow_score = _calculate_period_progress(db, user_id, date, date, completion_weight, timeliness_weight)
+
+    # Completed Tasks and Events
+    completed_tasks = crud.get_completed_tasks_by_date_range(db, user_id, date, date)
+    completed_events = crud.get_completed_events_by_date_range(db, user_id, date, date)
+
+    # Deleted tasks and events cannot be retrieved as the application uses hard deletes.
+    # Returning empty lists for these.
+    deleted_tasks = []
+    deleted_events = []
+
+    return {
+        "flowScore": int(flow_score),
+        "completedTasks": completed_tasks,
+        "completedEvents": completed_events,
+        "deletedTasks": deleted_tasks,
+        "deletedEvents": deleted_events
     }

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 class Comparison(BaseModel):
     change: int
@@ -23,3 +24,23 @@ class InsightsResponse(BaseModel):
     flowScore: FlowScore
     taskCompletion: List[TaskCompletion]
     productiveTimes: List[ProductiveTime]
+
+class DailyTaskSummary(BaseModel):
+    id: str
+    title: str
+    completed_at: Optional[datetime]
+
+class DailyEventSummary(BaseModel):
+    id: str
+    title: str
+    completed_at: Optional[datetime]
+
+class DailyInsightsResponse(BaseModel):
+    flowScore: int
+    completedTasks: List[DailyTaskSummary]
+    completedEvents: List[DailyEventSummary]
+    deletedTasks: List[DailyTaskSummary]
+    deletedEvents: List[DailyEventSummary]
+
+class ActivitySummaryResponse(BaseModel):
+    summary: str

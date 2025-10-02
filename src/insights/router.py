@@ -21,11 +21,23 @@ def get_dashboard_summary(
 ):
     return insights_service.get_insights(db, current_user.id, period)
 
-@router.get("/activity-summary")
-def get_activity_summary(
+from datetime import date
+
+@router.get("/activity-summary", response_model=schemas_insights.ActivitySummaryResponse)
+
+def get_activity_summary_route(
     period: str = Query("week"),
     db: Session = Depends(get_db),
     current_user: auth_models.User = Depends(get_current_user)
 ):
-    summary_text = insights_service.get_activity_summary(db, current_user.id, period)
-    return {"summary": summary_text}
+    summary = insights_service.get_activity_summary(db, current_user.id, period)
+    return {"summary": summary}
+
+@router.get("/{date}", response_model=schemas_insights.DailyInsightsResponse)
+
+def get_daily_insights(
+    date: date,
+    db: Session = Depends(get_db),
+    current_user: auth_models.User = Depends(get_current_user)
+):
+    return insights_service.get_daily_insights(db, current_user.id, date)
