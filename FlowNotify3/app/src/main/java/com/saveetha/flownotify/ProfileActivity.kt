@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
@@ -65,6 +66,12 @@ class ProfileActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_edit_profile).setOnClickListener {
             Log.d("ProfileActivity", "Edit Profile clicked")
             startActivity(Intent(this, EditProfileActivity::class.java))
+        }
+
+        val themePreferences = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+        themeSwitch.isChecked = when (themePreferences.getString("theme", "system")) {
+            "dark" -> true
+            else -> false
         }
 
         themeSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -159,14 +166,16 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun applyTheme(isDarkTheme: Boolean) {
-        lifecycleScope.launch {
-            try {
-                val theme = if (isDarkTheme) "dark" else "light"
-                apiService.updateUserSettings(mapOf("theme" to theme))
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        val themePreferences = getSharedPreferences("theme_prefs", MODE_PRIVATE)
+        val editor = themePreferences.edit()
+        if (isDarkTheme) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            editor.putString("theme", "dark")
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            editor.putString("theme", "light")
         }
+        editor.apply()
     }
 
     private fun showLogoutConfirmation() {
