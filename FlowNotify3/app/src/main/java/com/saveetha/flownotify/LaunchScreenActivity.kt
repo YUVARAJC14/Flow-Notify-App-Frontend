@@ -25,7 +25,7 @@ class LaunchScreenActivity : AppCompatActivity() {
         // Delay for 2 seconds and then navigate to LoginActivity
         lifecycleScope.launch {
             delay(2000L) // 2 seconds
-            startActivity(Intent(this@LaunchScreenActivity, LoginActivity::class.java))
+            startActivity(Intent(this@LaunchScreenActivity, SubscriptionActivity::class.java))
             finish() // Optional: so the user can't go back to the splash screen
         }
     }
